@@ -39,7 +39,6 @@
       background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
     }
     
-    /* Native Aspect Ratio Containers */
     .frame-container-16-9 { aspect-ratio: 16/9; width: 100%; max-height: 480px; }
     .frame-container-9-16 { aspect-ratio: 9/16; height: 460px; max-width: 100%; }
     .frame-container-1-1  { aspect-ratio: 1/1;  height: 440px; max-width: 100%; }
@@ -61,7 +60,7 @@
             <h1 class="text-xl font-extrabold tracking-tight text-white">Urai Video</h1>
             <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">100% Gratis</span>
           </div>
-          <p class="text-xs text-slate-400">Karya: <span class="font-semibold text-slate-200">Urai Ikhsan Fadhilah</span> • Smart AI Trimmer & Video Studio</p>
+          <p class="text-xs text-slate-400">Karya: <span class="font-semibold text-slate-200">Urai Ikhsan Fadhilah</span> • Multimodal AI Video Studio</p>
         </div>
       </div>
 
@@ -115,7 +114,7 @@
         </label>
       </div>
 
-      <!-- Player Stage (Clean Native HTML5 Video Display) -->
+      <!-- Player Stage -->
       <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[460px]">
         
         <!-- Ratio Selector -->
@@ -138,7 +137,7 @@
               <i class="fa-solid fa-film text-3xl"></i>
             </div>
             <h3 class="text-lg font-extrabold text-white mb-1">Urai Video Studio</h3>
-            <p class="text-xs text-slate-400 max-w-sm mb-5">Pilih dan unggah file video dari perangkat kamu untuk memotong klip dan mencari hook otomatis.</p>
+            <p class="text-xs text-slate-400 max-w-sm mb-5">Unggah video kamu, lalu berikan instruksi ke Gemini AI untuk menganalisis isi video secara presisi.</p>
             <label class="cursor-pointer px-5 py-2.5 rounded-xl gradient-bg text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition transform hover:scale-105">
               <input type="file" accept="video/*" class="hidden" onchange="handleFileSelect(event)">
               <i class="fa-solid fa-plus mr-1.5"></i> Unggah Video Lokal
@@ -223,38 +222,35 @@
         </button>
       </div>
 
-      <!-- TAB 1: GEMINI AI MOMENT DETECTOR -->
+      <!-- TAB 1: GEMINI AI MULTIMODAL MOMENT DETECTOR -->
       <div id="tabContentAi" class="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-slate-800 flex-grow">
         <div>
           <h2 class="text-sm font-bold text-white flex items-center justify-between">
             <span class="flex items-center gap-2">
               <i class="fa-solid fa-microchip text-indigo-400"></i>
-              Detektor Hook & Momen Otomatis
+              Analisis Isi Video Multimodal AI
             </span>
           </h2>
-          <p class="text-xs text-slate-400 mt-1">Cari titik hook paling viral, momen puncak, serta buat deskripsi caption otomatis.</p>
+          <p class="text-xs text-slate-400 mt-1">AI akan memindai cuplikan visual video secara langsung untuk mencari klip sesuai instruksi kamu.</p>
         </div>
 
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <label class="text-xs font-semibold text-slate-300">Instruksi AI Custom:</label>
-            <button onclick="autoDetectMoments()" class="text-[11px] text-indigo-400 font-bold hover:underline flex items-center gap-1 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-              <i class="fa-solid fa-bolt text-amber-400"></i> ✨ Cari Hook & Momen Otomatis
-            </button>
           </div>
-          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: Cari 3 momen hook paling menarik untuk TikTok Shorts lengkap dengan caption yang pas."></textarea>
+          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: cari moment yang menyentuh"></textarea>
         </div>
 
         <button onclick="analyzeVideoWithAI()" id="aiAnalyzeBtn" class="w-full py-3 rounded-xl gradient-bg text-white font-bold text-xs shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition transform active:scale-95">
           <i class="fa-solid fa-sparkles"></i>
-          <span>Analisis Video dengan Gemini AI</span>
+          <span id="aiBtnText">Analisis Video dengan Gemini AI</span>
         </button>
 
         <!-- AI Output Results Box -->
         <div id="aiResults" class="flex-grow overflow-y-auto max-h-[420px] custom-scrollbar flex flex-col gap-3 pr-1">
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-robot text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Unggah video lalu klik <b>"✨ Cari Hook & Momen Otomatis"</b> untuk memilihkan klip presisi.</p>
+            <p class="text-xs text-slate-400">Unggah video, tulis instruksi di atas (misal: <i>"cari moment yang menyentuh"</i>), lalu klik <b>Analisis Video</b>.</p>
           </div>
         </div>
       </div>
@@ -392,7 +388,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT APP LOGIC -->
+  <!-- JAVASCRIPT LOGIC WITH MULTIMODAL KEYFRAME EXTRACTION -->
   <script>
     let currentVideoFile = null;
     let videoUrl = null;
@@ -406,7 +402,6 @@
     let isPlaying = false;
     let animationFrameId = null;
 
-    // Window Init Event
     window.addEventListener('load', () => {
       loadApiKey();
       loadSavedClipsFromStorage();
@@ -516,7 +511,6 @@
       }
     }
 
-    // NATIVE CSS FRAMING (Robust & Smooth)
     function setAspectRatio(ratio) {
       currentRatio = ratio;
       document.getElementById('ratio169').className = ratio === '16:9' ? 'px-3 py-1 rounded-lg font-semibold transition bg-indigo-600 text-white' : 'px-3 py-1 rounded-lg font-semibold transition text-slate-400 hover:text-white';
@@ -597,40 +591,47 @@
       updateScrubberProgress();
     }
 
-    // AUTO HOOK & MOMENTS DETECTOR
-    function autoDetectMoments() {
-      if (!mainVideo.duration) {
+    // EXTRACTION FUNCTION: Takes 6 Snapshot Keyframes across duration
+    async function captureVideoKeyframes(numFrames = 6) {
+      if (!mainVideo.duration) return [];
+      const duration = mainVideo.duration;
+      const timestamps = [];
+      for (let i = 0; i < numFrames; i++) {
+        timestamps.push((duration / (numFrames + 1)) * (i + 1));
+      }
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 640;
+      tempCanvas.height = 360;
+      const tCtx = tempCanvas.getContext('2d');
+      
+      const originalTime = mainVideo.currentTime;
+      const keyframes = [];
+
+      for (let t of timestamps) {
+        mainVideo.currentTime = t;
+        await new Promise(resolve => {
+          const onSeeked = () => {
+            mainVideo.removeEventListener('seeked', onSeeked);
+            tCtx.drawImage(mainVideo, 0, 0, 640, 360);
+            const base64 = tempCanvas.toDataURL('image/jpeg', 0.75);
+            keyframes.push({ time: t, base64: base64.split(',')[1] });
+            resolve();
+          };
+          mainVideo.addEventListener('seeked', onSeeked);
+        });
+      }
+      mainVideo.currentTime = originalTime;
+      return keyframes;
+    }
+
+    // MULTIMODAL GEMINI AI INTEGRATION
+    async function analyzeVideoWithAI() {
+      if (!mainVideo.src) {
         alert("Silakan unggah file video terlebih dahulu.");
         return;
       }
-      let d = mainVideo.duration;
-      let clips = [
-        {
-          title: "🎯 Viral Visual Hook (0-7s)",
-          score: 97,
-          in: 0,
-          out: Math.min(7.0, d),
-          caption: "🔥 Pembukaan memukau yang langsung mengikat antusiasme penonton di 3 detik pertama! #viral #shorts"
-        },
-        {
-          title: "💡 Climax & Momen Puncak Inti",
-          score: 93,
-          in: (d * 0.3).toFixed(1),
-          out: (d * 0.55).toFixed(1),
-          caption: "🚀 Pembahasan paling berbobot dan bernilai tinggi dari video ini. Simak sampai tuntas! #insight #trending"
-        },
-        {
-          title: "🔄 Seamless Loop Ending",
-          score: 89,
-          in: (d * 0.75).toFixed(1),
-          out: d.toFixed(1),
-          caption: "✨ Penutup dengan ritme cepat yang siap memicu pemutaran ulang otomatis (loop). #fyp #reels"
-        }
-      ];
-      renderAiResultsUI(clips);
-    }
 
-    async function analyzeVideoWithAI() {
       const apiKey = localStorage.getItem('gemini_api_key');
       if (!apiKey) {
         openModal('apiKeyModal');
@@ -638,220 +639,62 @@
         return;
       }
 
-      const promptText = document.getElementById('aiPrompt').value || 'Cari 3 momen klip viral terbaik';
+      const promptText = document.getElementById('aiPrompt').value.trim() || 'Cari 3 momen klip terbaik';
       const btn = document.getElementById('aiAnalyzeBtn');
+      const btnText = document.getElementById('aiBtnText');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Memproses dengan AI...';
+      btnText.innerText = "Memindai cuplikan gambar video...";
 
       try {
-        const duration = mainVideo.duration || 60;
-        const systemPrompt = `Anda adalah editor video AI profesional. Berdasarkan durasi total video ${duration} detik ini dan instruksi pengguna: "${promptText}".
-Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
+        // 1. Take keyframe snapshots
+        const keyframes = await captureVideoKeyframes(6);
+        btnText.innerText = "Menganalisis dengan Gemini AI...";
+
+        // 2. Build Multimodal Payload (Images + Text Prompt)
+        const parts = [];
+        parts.push({
+          text: `Anda adalah editor video AI profesional. 
+Durasi total video ini adalah ${formatTime(mainVideo.duration)}.
+Berikut adalah 6 cuplikan gambar (keyframe) yang diambil dari sepanjang video pada detik-detik tertentu.
+
+Instruksi pengguna: "${promptText}".
+
+Tugas Anda: Analisis isi cuplikan gambar video ini dan berikan rekomendasi klip/momen potongan video yang 100% SESUAI dengan isi gambar dan instruksi pengguna.
+
+Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan lain:
 [
   {
-    "title": "Judul Momen",
+    "title": "Judul Momen Spesifik",
     "score": 95,
-    "in": 0.0,
-    "out": 7.5,
-    "caption": "Deskripsi/caption sosial media yang sangat pas dengan konteks potongan klip ini"
+    "in": 12.5,
+    "out": 45.0,
+    "caption": "Deskripsi/caption sosial media yang relevan dan menyentuh sesuai gambar video"
   }
-]`;
+]`
+        });
 
+        keyframes.forEach((kf, idx) => {
+          parts.push({ text: `Cuplikan Frame #${idx+1} pada timestamp ${formatTime(kf.time)}:` });
+          parts.push({
+            inline_data: {
+              mime_type: "image/jpeg",
+              data: kf.base64
+            }
+          });
+        });
+
+        // 3. Call Gemini 1.5 Flash API
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt }] }] })
+          body: JSON.stringify({ contents: [{ parts: parts }] })
         });
+
+        if (!response.ok) {
+          throw new Error(`API Error HTTP: ${response.status}`);
+        }
 
         const data = await response.json();
         const aiResponseText = data.candidates[0].content.parts[0].text;
         
-        let jsonStr = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        let clips = JSON.parse(jsonStr);
-
-        renderAiResultsUI(clips);
-      } catch (err) {
-        console.error(err);
-        autoDetectMoments();
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Analisis Video dengan Gemini AI';
-      }
-    }
-
-    function renderAiResultsUI(clips) {
-      let container = document.getElementById('aiResults');
-      container.innerHTML = clips.map((c, i) => `
-        <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2 text-xs">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white">${i+1}. ${c.title}</span>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px]">Score: ${c.score}%</span>
-          </div>
-          <p class="text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80 text-[11px]">${c.caption}</p>
-          <div class="flex items-center justify-between text-slate-400 font-mono text-[11px]">
-            <span>${formatTime(c.in)} - ${formatTime(c.out)}</span>
-            <div class="flex gap-1.5">
-              <button onclick="previewSavedClip(${c.in}, ${c.out})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded font-semibold">Pratinjau</button>
-              <button onclick="addAiClipToSaved('${c.title}', ${c.in}, ${c.out})" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold">+ Simpan</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // LocalStorage Data Safety
-    function saveSavedClipsToStorage() {
-      localStorage.setItem('urai_video_saved_clips', JSON.stringify(savedClips));
-    }
-
-    function loadSavedClipsFromStorage() {
-      const data = localStorage.getItem('urai_video_saved_clips');
-      if (data) {
-        try {
-          savedClips = JSON.parse(data);
-          updateSavedClipsUI();
-        } catch (e) {
-          console.error("Gagal memuat klip tersimpan:", e);
-        }
-      }
-    }
-
-    function addAiClipToSaved(title, inP, outP) {
-      savedClips.push({
-        id: Date.now(),
-        title: title,
-        in: parseFloat(inP),
-        out: parseFloat(outP),
-        duration: (outP - inP).toFixed(1)
-      });
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-      switchTab('saved');
-    }
-
-    function saveCurrentTrim() {
-      if (!mainVideo.src) return;
-      savedClips.push({
-        id: Date.now(),
-        title: `Klip ${savedClips.length + 1} (${formatTime(inPoint)} - ${formatTime(outPoint)})`,
-        in: inPoint,
-        out: outPoint,
-        duration: (outPoint - inPoint).toFixed(1)
-      });
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-      switchTab('saved');
-    }
-
-    function updateSavedClipsUI() {
-      document.getElementById('savedCount').innerText = savedClips.length;
-      let container = document.getElementById('savedClipsList');
-      
-      if (savedClips.length === 0) {
-        container.innerHTML = `
-          <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
-            <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Belum ada klip tersimpan. Simpan klip dari Timeline atau hasil AI.</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = savedClips.map((c, index) => `
-        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
-          <div>
-            <p class="font-bold text-white">${c.title}</p>
-            <p class="text-[11px] text-slate-400">Durasi: ${c.duration}s (${formatTime(c.in)} - ${formatTime(c.out)})</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="previewSavedClip(${c.in}, ${c.out})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-400" title="Pratinjau">
-              <i class="fa-solid fa-play"></i>
-            </button>
-            <button onclick="deleteSavedClip(${index})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400" title="Hapus">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function previewSavedClip(start, end) {
-      inPoint = start;
-      outPoint = end;
-      updateScrubber();
-      previewTrimRegion();
-    }
-
-    function deleteSavedClip(idx) {
-      savedClips.splice(idx, 1);
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-    }
-
-    function clearSavedClips() {
-      savedClips = [];
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-    }
-
-    function exportBatchClips() {
-      if (savedClips.length === 0) {
-        alert('Tidak ada klip tersimpan untuk di-export.');
-        return;
-      }
-      alert(`Memulai render & export ${savedClips.length} klip secara otomatis...`);
-    }
-
-    function detectSilence() {
-      if (!mainVideo.src) {
-        alert('Silakan pilih video terlebih dahulu.');
-        return;
-      }
-      let res = document.getElementById('silenceResults');
-      res.innerHTML = '<p class="text-xs text-indigo-400 text-center py-4"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Menganalisis gelombang audio...</p>';
-      
-      setTimeout(() => {
-        let fakeSilences = [
-          { in: 1.2, out: 2.5 },
-          { in: 8.4, out: 9.8 }
-        ];
-        res.innerHTML = fakeSilences.map((s, idx) => `
-          <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
-            <span class="text-slate-300 font-mono">Keheningan #${idx+1}: ${formatTime(s.in)} - ${formatTime(s.out)}</span>
-            <button onclick="previewSavedClip(${s.in}, ${s.out})" class="px-2 py-1 bg-rose-500/10 text-rose-400 rounded font-bold hover:bg-rose-500/20">Potong Momen Ini</button>
-          </div>
-        `).join('');
-      }, 800);
-    }
-
-    function switchTab(tab) {
-      document.getElementById('tabContentAi').classList.add('hidden');
-      document.getElementById('tabContentSilence').classList.add('hidden');
-      document.getElementById('tabContentSaved').classList.add('hidden');
-
-      document.getElementById('tabBtnAi').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-      document.getElementById('tabBtnSilence').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-      document.getElementById('tabBtnSaved').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-
-      if (tab === 'ai') {
-        document.getElementById('tabContentAi').classList.remove('hidden');
-        document.getElementById('tabBtnAi').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      } else if (tab === 'silence') {
-        document.getElementById('tabContentSilence').classList.remove('hidden');
-        document.getElementById('tabBtnSilence').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      } else if (tab === 'saved') {
-        document.getElementById('tabContentSaved').classList.remove('hidden');
-        document.getElementById('tabBtnSaved').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      }
-    }
-
-    function formatTime(seconds) {
-      if (isNaN(seconds)) return "00:00.00";
-      let m = Math.floor(seconds / 60);
-      let s = Math.floor(seconds % 60);
-      let ms = Math.floor((seconds % 1) * 100);
-      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-    }
-  </script>
-</body>
-</html>
+        let jsonStr = aiResponseText.replace(/```json/g, '').replace(/
