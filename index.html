@@ -128,7 +128,7 @@
           <video id="mainVideo" class="w-full h-full object-contain hidden" crossorigin="anonymous" playsinline></video>
           <canvas id="renderCanvas" class="w-full h-full object-contain"></canvas>
           
-          <!-- Clean Placeholder (No Demo Video) -->
+          <!-- Clean Placeholder -->
           <div id="playerPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90">
             <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-indigo-400 shadow-xl">
               <i class="fa-solid fa-folder-open text-3xl"></i>
@@ -403,9 +403,19 @@
     let isPlaying = false;
     let animationFrameId = null;
 
+    // Window Init Event
     window.addEventListener('load', () => {
       loadApiKey();
+      loadSavedClipsFromStorage(); // Auto-load clips from LocalStorage
       setupCanvasResize();
+    });
+
+    // Anti-refresh & close confirmation
+    window.addEventListener('beforeunload', (e) => {
+      if (savedClips.length > 0 || mainVideo.src) {
+        e.preventDefault();
+        e.returnValue = 'Pekerjaan clipping Anda belum selesai. Yakin ingin memuat ulang halaman?';
+      }
     });
 
     function setupCanvasResize() {
@@ -727,6 +737,23 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
       `).join('');
     }
 
+    // Persistent LocalStorage Functions
+    function saveSavedClipsToStorage() {
+      localStorage.setItem('urai_video_saved_clips', JSON.stringify(savedClips));
+    }
+
+    function loadSavedClipsFromStorage() {
+      const data = localStorage.getItem('urai_video_saved_clips');
+      if (data) {
+        try {
+          savedClips = JSON.parse(data);
+          updateSavedClipsUI();
+        } catch (e) {
+          console.error("Gagal memuat klip tersimpan:", e);
+        }
+      }
+    }
+
     function addAiClipToSaved(title, inP, outP) {
       savedClips.push({
         id: Date.now(),
@@ -735,6 +762,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
         out: parseFloat(outP),
         duration: (outP - inP).toFixed(1)
       });
+      saveSavedClipsToStorage();
       updateSavedClipsUI();
       switchTab('saved');
     }
@@ -748,6 +776,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
         out: outPoint,
         duration: (outPoint - inPoint).toFixed(1)
       });
+      saveSavedClipsToStorage();
       updateSavedClipsUI();
       switchTab('saved');
     }
@@ -760,7 +789,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
         container.innerHTML = `
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Belum ada klip yang disimpan.</p>
+            <p class="text-xs text-slate-400">Belum ada klip yang disimpan. Simpan klip dari Timeline atau hasil AI.</p>
           </div>
         `;
         return;
@@ -793,11 +822,13 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
 
     function deleteSavedClip(idx) {
       savedClips.splice(idx, 1);
+      saveSavedClipsToStorage();
       updateSavedClipsUI();
     }
 
     function clearSavedClips() {
       savedClips = [];
+      saveSavedClipsToStorage();
       updateSavedClipsUI();
     }
 
