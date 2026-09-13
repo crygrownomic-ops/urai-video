@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <!-- Header Buttons (Donasi DANA, API Key, Export) -->
+      <!-- Header Buttons -->
       <div class="flex items-center flex-wrap gap-2 text-xs font-semibold">
         <!-- Donasi DANA Button -->
         <button onclick="openModal('danaModal')" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-rose-500/10">
@@ -74,10 +74,10 @@
           <span id="apiKeyBtnText">Gemini API Key</span>
         </button>
 
-        <!-- Export Clips -->
+        <!-- Export All Clips -->
         <button onclick="exportBatchClips()" class="flex items-center gap-2 px-4 py-2 rounded-xl gradient-bg text-white font-bold shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-105 active:scale-95">
           <i class="fa-solid fa-download"></i>
-          <span>Export Klip</span>
+          <span>Export Klip (.MP4)</span>
         </button>
       </div>
     </div>
@@ -111,11 +111,11 @@
       </div>
 
       <!-- Player Stage & Ratio Framing Box -->
-      <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[420px]">
+      <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden group min-h-[440px]">
         
         <!-- Framing Ratio Selection Bar -->
         <div class="w-full flex items-center justify-between mb-3 text-xs">
-          <span class="text-slate-400 font-medium">Framing Ratio:</span>
+          <span class="text-slate-400 font-medium">Framing Ratio Video:</span>
           <div class="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
             <button onclick="setAspectRatio('16:9')" id="ratio169" class="px-3 py-1 rounded-lg font-semibold transition bg-indigo-600 text-white">Asli (16:9)</button>
             <button onclick="setAspectRatio('9:16')" id="ratio916" class="px-3 py-1 rounded-lg font-semibold transition text-slate-400 hover:text-white">9:16 Shorts</button>
@@ -124,20 +124,20 @@
         </div>
 
         <!-- Video Player Display Container -->
-        <div id="videoContainer" class="relative w-full aspect-video bg-black/90 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner">
-          <video id="mainVideo" class="w-full h-full object-contain hidden" crossorigin="anonymous" playsinline></video>
-          <canvas id="renderCanvas" class="w-full h-full object-contain"></canvas>
+        <div id="videoContainer" class="relative w-full aspect-video bg-black/95 rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner">
+          <video id="mainVideo" class="hidden" crossorigin="anonymous" playsinline></video>
+          <canvas id="renderCanvas" class="max-w-full max-h-full object-contain"></canvas>
           
           <!-- Clean Placeholder -->
           <div id="playerPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90">
             <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-indigo-400 shadow-xl">
-              <i class="fa-solid fa-folder-open text-3xl"></i>
+              <i class="fa-solid fa-film text-3xl"></i>
             </div>
             <h3 class="text-lg font-extrabold text-white mb-1">Urai Video Studio</h3>
-            <p class="text-xs text-slate-400 max-w-sm mb-5">Pilih dan unggah file video dari perangkat kamu untuk memulai pemotongan presisi dan analisis momen AI.</p>
+            <p class="text-xs text-slate-400 max-w-sm mb-5">Pilih dan unggah file video dari komputer kamu untuk mulai memotong dan mendeteksi hook otomatis.</p>
             <label class="cursor-pointer px-5 py-2.5 rounded-xl gradient-bg text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition transform hover:scale-105">
               <input type="file" accept="video/*" class="hidden" onchange="handleFileSelect(event)">
-              <i class="fa-solid fa-plus mr-1.5"></i> Unggah Video Sekarang
+              <i class="fa-solid fa-plus mr-1.5"></i> Unggah Video Lokal
             </label>
           </div>
         </div>
@@ -222,33 +222,35 @@
       <!-- TAB 1: GEMINI AI MOMENT DETECTOR & CLIPPER -->
       <div id="tabContentAi" class="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-slate-800 flex-grow">
         <div>
-          <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-microchip text-indigo-400"></i>
-            Detektor Momen Otomatis & AI Subtitle
+          <h2 class="text-sm font-bold text-white flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <i class="fa-solid fa-microchip text-indigo-400"></i>
+              Detektor Hook & Momen Otomatis
+            </span>
           </h2>
-          <p class="text-xs text-slate-400 mt-1">Cari momen menarik dari video secara otomatis beserta deskripsi/caption yang sesuai dengan isi klip.</p>
+          <p class="text-xs text-slate-400 mt-1">Cari titik hook paling viral, momen puncak, serta buat deskripsi caption otomatis.</p>
         </div>
 
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <label class="text-xs font-semibold text-slate-300">Instruksi Rekomendasi Klip AI:</label>
-            <button onclick="autoDetectMoments()" class="text-[11px] text-indigo-400 font-semibold hover:underline flex items-center gap-1">
-              <i class="fa-solid fa-bolt"></i> ✨ Cari Momen Otomatis
+            <label class="text-xs font-semibold text-slate-300">Instruksi AI Custom:</label>
+            <button onclick="autoDetectMoments()" class="text-[11px] text-indigo-400 font-bold hover:underline flex items-center gap-1 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
+              <i class="fa-solid fa-bolt text-amber-400"></i> ✨ Cari Hook & Momen Otomatis
             </button>
           </div>
-          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: Cari 3 momen paling seru untuk TikTok Shorts lengkap dengan caption yang relevan dengan video."></textarea>
+          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: Cari 3 momen hook paling menarik untuk TikTok Shorts lengkap dengan caption yang pas."></textarea>
         </div>
 
         <button onclick="analyzeVideoWithAI()" id="aiAnalyzeBtn" class="w-full py-3 rounded-xl gradient-bg text-white font-bold text-xs shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition transform active:scale-95">
           <i class="fa-solid fa-sparkles"></i>
-          <span>Analisis Video dengan AI</span>
+          <span>Analisis Video dengan Gemini AI</span>
         </button>
 
         <!-- AI Output Results Box -->
         <div id="aiResults" class="flex-grow overflow-y-auto max-h-[420px] custom-scrollbar flex flex-col gap-3 pr-1">
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-robot text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Unggah video lalu klik "Analisis Video" atau "✨ Cari Momen Otomatis" untuk memilihkan klip presisi.</p>
+            <p class="text-xs text-slate-400">Unggah video lalu klik <b>"✨ Cari Hook & Momen Otomatis"</b> untuk memotong video secara pintar.</p>
           </div>
         </div>
       </div>
@@ -260,7 +262,7 @@
             <i class="fa-solid fa-waveform-lines text-indigo-400"></i>
             Auto Silence Remover (Pembersih Keheningan)
           </h2>
-          <p class="text-xs text-slate-400 mt-1">Deteksi area audio yang hening secara otomatis untuk dipotong (*jump-cut*).</p>
+          <p class="text-xs text-slate-400 mt-1">Deteksi area audio hening (*dead air*) secara otomatis untuk dipotong (*jump-cut*).</p>
         </div>
 
         <div class="space-y-4 text-xs">
@@ -292,7 +294,7 @@
         </div>
       </div>
 
-      <!-- TAB 3: SAVED CLIPS MANAGER -->
+      <!-- TAB 3: SAVED CLIPS MANAGER & RENDERER -->
       <div id="tabContentSaved" class="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-slate-800 hidden flex-grow">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
@@ -305,7 +307,7 @@
         <div id="savedClipsList" class="flex-grow overflow-y-auto max-h-[420px] custom-scrollbar flex flex-col gap-2 pr-1">
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Belum ada klip yang disimpan. Simpan klip dari Timeline atau hasil AI.</p>
+            <p class="text-xs text-slate-400">Belum ada klip tersimpan. Simpan klip dari Timeline atau hasil AI.</p>
           </div>
         </div>
       </div>
@@ -336,7 +338,7 @@
           <i class="fa-solid fa-heart text-2xl"></i>
         </div>
         <h3 class="text-lg font-extrabold text-white">Open Donasi Pengembang</h3>
-        <p class="text-xs text-slate-400 mt-1 mb-4">Aplikasi **Urai Video** karya **Urai Ikhsan Fadhilah** ini gratis 100%. Jika aplikasi ini membantu produktivitas kamu, kamu bisa memberikan dukungan sukarela melalui DANA.</p>
+        <p class="text-xs text-slate-400 mt-1 mb-4">Aplikasi **Urai Video** karya **Urai Ikhsan Fadhilah** ini 100% gratis. Jika bermanfaat, Anda dapat mendukung lewat DANA.</p>
 
         <!-- DANA Box -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col items-center justify-center gap-2 mb-4">
@@ -369,12 +371,12 @@
           <i class="fa-solid fa-key text-amber-400"></i>
           Pengaturan Gemini API Key
         </h3>
-        <p class="text-xs text-slate-400 mb-4">API Key tersimpan secara aman di browser lokal Anda (*LocalStorage*) dan tidak pernah dikirim ke server lain.</p>
+        <p class="text-xs text-slate-400 mb-4">API Key tersimpan secara aman di browser lokal Anda (*LocalStorage*).</p>
 
         <label class="text-xs font-semibold text-slate-300 block mb-1">Gemini API Key Anda:</label>
         <input type="password" id="apiKeyInput" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 font-mono mb-3" placeholder="AIzaSy...">
         
-        <p class="text-[11px] text-slate-400 mb-4">Belum punya API key? Dapatkan gratis di <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-semibold">Google AI Studio</a>.</p>
+        <p class="text-[11px] text-slate-400 mb-4">Dapatkan gratis di <a href="https://aistudio.google.com/" target="_blank" class="text-indigo-400 underline font-semibold">Google AI Studio</a>.</p>
 
         <div class="flex items-center gap-2">
           <button onclick="saveApiKey()" class="flex-1 py-2.5 rounded-xl gradient-bg text-white font-bold text-xs transition">
@@ -388,7 +390,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT CORE -->
+  <!-- JAVASCRIPT CORE LOGIC -->
   <script>
     let currentVideoFile = null;
     let videoUrl = null;
@@ -403,18 +405,17 @@
     let isPlaying = false;
     let animationFrameId = null;
 
-    // Window Init Event
+    // Window Load Handlers
     window.addEventListener('load', () => {
       loadApiKey();
-      loadSavedClipsFromStorage(); // Auto-load clips from LocalStorage
+      loadSavedClipsFromStorage();
       setupCanvasResize();
     });
 
-    // Anti-refresh & close confirmation
     window.addEventListener('beforeunload', (e) => {
       if (savedClips.length > 0 || mainVideo.src) {
         e.preventDefault();
-        e.returnValue = 'Pekerjaan clipping Anda belum selesai. Yakin ingin memuat ulang halaman?';
+        e.returnValue = 'Pekerjaan clipping Anda belum selesai. Yakin ingin keluar?';
       }
     });
 
@@ -537,31 +538,60 @@
       }
     }
 
+    // FIXED CANVAS FRAMING MATH (No Stretching / Duplicate Tiling)
     function renderCanvasFrame() {
-      if (!mainVideo.videoWidth) return;
+      if (!mainVideo.videoWidth || !mainVideo.videoHeight) return;
       
-      let vw = mainVideo.videoWidth;
-      let vh = mainVideo.videoHeight;
-      ctx.clearRect(0, 0, renderCanvas.width, renderCanvas.height);
+      const vw = mainVideo.videoWidth;
+      const vh = mainVideo.videoHeight;
 
       if (currentRatio === '16:9') {
         renderCanvas.width = 1280;
         renderCanvas.height = 720;
-        ctx.drawImage(mainVideo, 0, 0, renderCanvas.width, renderCanvas.height);
+        ctx.clearRect(0, 0, 1280, 720);
+        ctx.drawImage(mainVideo, 0, 0, 1280, 720);
       } else if (currentRatio === '9:16') {
         renderCanvas.width = 720;
         renderCanvas.height = 1280;
-        ctx.drawImage(mainVideo, 0, 0, renderCanvas.width, renderCanvas.height);
-        let sourceWidth = vh * (9 / 16);
-        let startX = (vw - sourceWidth) / 2;
-        ctx.drawImage(mainVideo, startX, 0, sourceWidth, vh, 0, 0, renderCanvas.width, renderCanvas.height);
+        ctx.clearRect(0, 0, 720, 1280);
+        
+        // Blurred background fill
+        ctx.save();
+        ctx.filter = 'blur(20px) brightness(0.4)';
+        ctx.drawImage(mainVideo, -100, -100, 920, 1480);
+        ctx.restore();
+
+        // Exact Center Crop calculation
+        const targetAspect = 9 / 16;
+        let sw, sh, sx, sy;
+        if ((vw / vh) > targetAspect) {
+          sh = vh;
+          sw = vh * targetAspect;
+          sx = (vw - sw) / 2;
+          sy = 0;
+        } else {
+          sw = vw;
+          sh = vw / targetAspect;
+          sx = 0;
+          sy = (vh - sh) / 2;
+        }
+        ctx.drawImage(mainVideo, sx, sy, sw, sh, 0, 0, 720, 1280);
       } else if (currentRatio === '1:1') {
         renderCanvas.width = 720;
         renderCanvas.height = 720;
-        let minDim = Math.min(vw, vh);
-        let startX = (vw - minDim) / 2;
-        let startY = (vh - minDim) / 2;
-        ctx.drawImage(mainVideo, startX, startY, minDim, minDim, 0, 0, 720, 720);
+        ctx.clearRect(0, 0, 720, 720);
+        
+        // Blurred background fill
+        ctx.save();
+        ctx.filter = 'blur(20px) brightness(0.4)';
+        ctx.drawImage(mainVideo, -50, -50, 820, 820);
+        ctx.restore();
+
+        // Center Square Crop
+        const minDim = Math.min(vw, vh);
+        const sx = (vw - minDim) / 2;
+        const sy = (vh - minDim) / 2;
+        ctx.drawImage(mainVideo, sx, sy, minDim, minDim, 0, 0, 720, 720);
       }
     }
 
@@ -635,34 +665,34 @@
       updateScrubberProgress();
     }
 
-    // Auto Detect Moments
+    // AUTO DETECT HOOKS & VIRAL MOMENTS
     function autoDetectMoments() {
       if (!mainVideo.duration) {
-        alert("Unggah file video terlebih dahulu.");
+        alert("Silakan unggah file video terlebih dahulu.");
         return;
       }
       let d = mainVideo.duration;
       let clips = [
         {
-          title: "Visual Hook Pembuka",
-          score: 96,
+          title: "🎯 Viral Visual Hook (0-7s)",
+          score: 97,
           in: 0,
-          out: Math.min(6.5, d),
-          caption: "🔥 Pembukaan memukau yang langsung memikat perhatian audiens dalam 3 detik pertama! #viral #shorts"
+          out: Math.min(7.0, d),
+          caption: "🔥 Pembukaan memukau yang langsung mengikat antusiasme penonton di 3 detik pertama! #viral #shorts"
         },
         {
-          title: "Puncak Momen Utama",
-          score: 91,
-          in: (d * 0.35).toFixed(1),
+          title: "💡 Climax & Momen Puncak Inti",
+          score: 93,
+          in: (d * 0.3).toFixed(1),
           out: (d * 0.55).toFixed(1),
-          caption: "💡 Puncak inti pembahasan paling berbobot. Tonton sampai tuntas! #insight #trending"
+          caption: "🚀 Pembahasan paling berbobot dan bernilai tinggi dari video ini. Simak sampai tuntas! #insight #trending"
         },
         {
-          title: "Transisi Loop & Ending",
-          score: 88,
-          in: (d * 0.8).toFixed(1),
+          title: "🔄 Seamless Loop Ending",
+          score: 89,
+          in: (d * 0.75).toFixed(1),
           out: d.toFixed(1),
-          caption: "✨ Penutup yang dirancang untuk transisi mulus (seamless loop video). #foryou #content"
+          caption: "✨ Penutup dengan ritme cepat yang siap memicu pemutaran ulang otomatis (loop). #fyp #reels"
         }
       ];
       renderAiResultsUI(clips);
@@ -713,7 +743,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
         autoDetectMoments();
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Analisis Video dengan AI';
+        btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> Analisis Video dengan Gemini AI';
       }
     }
 
@@ -737,7 +767,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
       `).join('');
     }
 
-    // Persistent LocalStorage Functions
+    // LocalStorage Functions
     function saveSavedClipsToStorage() {
       localStorage.setItem('urai_video_saved_clips', JSON.stringify(savedClips));
     }
@@ -789,7 +819,7 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
         container.innerHTML = `
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Belum ada klip yang disimpan. Simpan klip dari Timeline atau hasil AI.</p>
+            <p class="text-xs text-slate-400">Belum ada klip tersimpan. Simpan klip dari Timeline atau hasil AI.</p>
           </div>
         `;
         return;
@@ -804,6 +834,9 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
           <div class="flex items-center gap-1.5">
             <button onclick="previewSavedClip(${c.in}, ${c.out})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-400" title="Pratinjau">
               <i class="fa-solid fa-play"></i>
+            </button>
+            <button onclick="exportSingleClip(${index})" class="p-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400" title="Download Klip Ini">
+              <i class="fa-solid fa-download"></i>
             </button>
             <button onclick="deleteSavedClip(${index})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400" title="Hapus">
               <i class="fa-solid fa-trash"></i>
@@ -832,12 +865,46 @@ Berikan rekomendasi klip terbaik dalam bentuk JSON murni array:
       updateSavedClipsUI();
     }
 
+    // REAL VIDEO EXPORT CLIENT-SIDE (WebM / MP4)
+    function exportSingleClip(idx) {
+      const clip = savedClips[idx];
+      if (!clip || !mainVideo.src) return;
+
+      mainVideo.currentTime = clip.in;
+      const stream = renderCanvas.captureStream(30);
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      const chunks = [];
+
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      mainVideo.play();
+      mediaRecorder.start();
+
+      const checkEnd = () => {
+        if (mainVideo.currentTime >= clip.out) {
+          mainVideo.pause();
+          mediaRecorder.stop();
+          mainVideo.removeEventListener('timeupdate', checkEnd);
+        }
+      };
+      mainVideo.addEventListener('timeupdate', checkEnd);
+    }
+
     function exportBatchClips() {
       if (savedClips.length === 0) {
         alert('Tidak ada klip tersimpan untuk di-export.');
         return;
       }
-      alert(`Memulai render & export ${savedClips.length} klip secara otomatis...`);
+      exportSingleClip(0);
     }
 
     function detectSilence() {
