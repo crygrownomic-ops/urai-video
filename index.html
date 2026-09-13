@@ -111,7 +111,7 @@
         </label>
       </div>
 
-      <!-- Player Stage -->
+      <!-- Player Stage with Realtime Canvas Viewport -->
       <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[460px]">
         
         <!-- Ratio Selector -->
@@ -124,10 +124,11 @@
           </div>
         </div>
 
-        <!-- Video Viewport Container -->
+        <!-- Video Stage Viewport Container -->
         <div id="videoStageContainer" class="relative mx-auto bg-black rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner frame-container-16-9 transition-all duration-300">
-          <video id="mainVideo" class="w-full h-full object-contain hidden" crossorigin="anonymous" playsinline></video>
-          
+          <video id="mainVideo" class="hidden" crossorigin="anonymous" playsinline></video>
+          <canvas id="previewCanvas" class="w-full h-full object-contain hidden"></canvas>
+
           <div id="playerPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90">
             <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-indigo-400 shadow-xl">
               <i class="fa-solid fa-film text-3xl"></i>
@@ -229,7 +230,6 @@
           <p class="text-xs text-slate-400 mt-1">AI akan memindai cuplikan visual video secara langsung untuk mencari klip sesuai instruksi kamu.</p>
         </div>
 
-        <!-- Target Duration Selector -->
         <div class="flex flex-col gap-1.5">
           <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
             <span>Target Durasi Hook (Reels/Shorts):</span>
@@ -261,14 +261,14 @@
         </div>
       </div>
 
-      <!-- TAB 2: CUSTOM STUDIO (BANNER, WATERMARK, BGM, SUBTITLE STYLE) -->
+      <!-- TAB 2: CUSTOM STUDIO (REAL-TIME PREVIEW) -->
       <div id="tabContentEffects" class="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-slate-800 hidden flex-grow overflow-y-auto max-h-[560px] custom-scrollbar">
         <div>
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-palette text-indigo-400"></i>
-            Pengaturan Overlay Studio & Audio BGM
+            Pengaturan Overlay Studio & Pratinjau Teks
           </h2>
-          <p class="text-xs text-slate-400 mt-1">Kustomisasi visual banner, watermark, musik latar, dan gaya subtitle untuk video hasil ekspor.</p>
+          <p class="text-xs text-slate-400 mt-1">Setiap perubahan opsi di sini akan langsung tampil pada pemutar video utama di sebelah kiri secara *real-time*.</p>
         </div>
 
         <div class="space-y-4 text-xs">
@@ -279,9 +279,9 @@
                 <p class="font-bold text-white">1. Banner Title Hook (Atas Video)</p>
                 <p class="text-[11px] text-slate-400">Tampilkan judul bar di bagian atas video untuk memikat penonton.</p>
               </div>
-              <input type="checkbox" id="bannerToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer">
+              <input type="checkbox" id="bannerToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer" onchange="renderFrame()">
             </div>
-            <input type="text" id="bannerTextInput" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Contoh: CARA NAIKKAN OMSET 10X LIPAT 🚀">
+            <input type="text" id="bannerTextInput" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Contoh: CARA NAIKKAN OMSET 10X LIPAT 🚀" oninput="renderFrame()">
           </div>
 
           <!-- 2. CUSTOM WATERMARK OVERLAY -->
@@ -291,11 +291,11 @@
                 <p class="font-bold text-white">2. Watermark Teks / Akun User</p>
                 <p class="text-[11px] text-slate-400">Tampilkan teks branding atau nama akun sosial media pengguna.</p>
               </div>
-              <input type="checkbox" id="watermarkToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer">
+              <input type="checkbox" id="watermarkToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer" onchange="renderFrame()">
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input type="text" id="watermarkTextInput" value="@korporatpedia" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Teks Watermark (e.g. @namauser)">
-              <select id="watermarkPosSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 font-semibold outline-none">
+              <input type="text" id="watermarkTextInput" value="@korporatpedia" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Teks Watermark (e.g. @namauser)" oninput="renderFrame()">
+              <select id="watermarkPosSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 font-semibold outline-none" onchange="renderFrame()">
                 <option value="bottom-right" selected>Kanan Bawah</option>
                 <option value="bottom-left">Kiri Bawah</option>
                 <option value="top-right">Kanan Atas</option>
@@ -304,19 +304,19 @@
             </div>
           </div>
 
-          <!-- 3. CUSTOM SUBTITLE STYLE & BURN-IN -->
+          <!-- 3. CUSTOM SUBTITLE STYLE & REALTIME TEXT -->
           <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
             <div class="flex items-center justify-between">
               <div>
                 <p class="font-bold text-white">3. Gaya Subtitle / Lirik Teks</p>
                 <p class="text-[11px] text-slate-400">Atur tampilan teks lirik caption di layar.</p>
               </div>
-              <input type="checkbox" id="subtitleToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer">
+              <input type="checkbox" id="subtitleToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer" onchange="renderFrame()">
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="text-[10px] text-slate-400 block mb-1">Warna Subtitle:</label>
-                <select id="subColorSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2 border border-slate-800 font-semibold">
+                <select id="subColorSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2 border border-slate-800 font-semibold" onchange="renderFrame()">
                   <option value="#facc15" selected>Kuning Highlight</option>
                   <option value="#ffffff">Putih Clean</option>
                   <option value="#4ade80">Hijau Neon</option>
@@ -324,14 +324,14 @@
               </div>
               <div>
                 <label class="text-[10px] text-slate-400 block mb-1">Ukuran Font:</label>
-                <select id="subSizeSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2 border border-slate-800 font-semibold">
+                <select id="subSizeSelect" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2 border border-slate-800 font-semibold" onchange="renderFrame()">
                   <option value="medium" selected>Sedang (Default)</option>
                   <option value="large">Besar (Shorts Bold)</option>
                   <option value="small">Kecil</option>
                 </select>
               </div>
             </div>
-            <input type="text" id="customSubtitleText" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Teks caption/lirik otomatis akan tampil di sini...">
+            <input type="text" id="customSubtitleText" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500" placeholder="Teks caption/lirik otomatis akan tampil di sini..." oninput="renderFrame()">
           </div>
 
           <!-- 4. BACKGROUND MUSIC (BGM) AUTO-MIXER -->
@@ -358,15 +358,6 @@
               </div>
               <input type="range" id="bgmVolume" min="0.05" max="0.5" step="0.05" value="0.2" oninput="document.getElementById('bgmVolValue').innerText = Math.round(this.value * 100) + '%'" class="w-full accent-indigo-500">
             </div>
-          </div>
-
-          <!-- 5. MOTION TRACKING -->
-          <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between">
-            <div>
-              <p class="font-bold text-white">5. Smart Motion Tracking Wajah</p>
-              <p class="text-[11px] text-slate-400">Pergeseran crop 9:16 mulus mengikuti fokus wajah pembicara.</p>
-            </div>
-            <input type="checkbox" id="motionTrackingToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer">
           </div>
 
         </div>
@@ -506,11 +497,13 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
+  <!-- JAVASCRIPT LOGIC WITH REALTIME PREVIEW ENGINE -->
   <script>
     let currentVideoFile = null;
     let videoUrl = null;
     let mainVideo = document.getElementById('mainVideo');
+    let previewCanvas = document.getElementById('previewCanvas');
+    let pCtx = previewCanvas.getContext('2d');
     let videoStageContainer = document.getElementById('videoStageContainer');
     
     let currentRatio = '16:9';
@@ -521,8 +514,6 @@
     let isPlaying = false;
     let animationFrameId = null;
 
-    let currentCropX = 0;
-    let targetCropX = 0;
     let bgmAudioObject = new Audio();
 
     window.addEventListener('load', () => {
@@ -614,7 +605,7 @@
 
     function loadVideoToPlayer(src) {
       document.getElementById('playerPlaceholder').classList.add('hidden');
-      mainVideo.classList.remove('hidden');
+      previewCanvas.classList.remove('hidden');
       mainVideo.src = src;
 
       mainVideo.onloadedmetadata = () => {
@@ -622,7 +613,10 @@
         outPoint = mainVideo.duration;
         document.getElementById('durationText').innerText = formatTime(mainVideo.duration);
         updateScrubber();
+        renderFrame();
       };
+
+      mainVideo.onseeked = () => { renderFrame(); };
     }
 
     function togglePlay() {
@@ -643,7 +637,125 @@
     function drawLoop() {
       if (!mainVideo.paused && !mainVideo.ended) {
         updateScrubberProgress();
+        renderFrame();
         animationFrameId = requestAnimationFrame(drawLoop);
+      }
+    }
+
+    // REALTIME CANVAS PREVIEW RENDERER WITH STABLE CENTER CROP
+    function renderFrame() {
+      if (!mainVideo || !mainVideo.videoWidth) return;
+
+      let cw = 1280, ch = 720;
+      if (currentRatio === '9:16') { cw = 720; ch = 1280; }
+      else if (currentRatio === '1:1') { cw = 720; ch = 720; }
+
+      if (previewCanvas.width !== cw || previewCanvas.height !== ch) {
+        previewCanvas.width = cw;
+        previewCanvas.height = ch;
+      }
+
+      const vw = mainVideo.videoWidth;
+      const vh = mainVideo.videoHeight;
+      const vAR = vw / vh;
+      const cAR = cw / ch;
+
+      // 1. STABLE CENTER-CROP VISUAL DRAWING
+      if (currentRatio !== '16:9') {
+        let sw = vw, sh = vh;
+        if (vAR > cAR) sw = vh * cAR;
+        else sh = vw / cAR;
+
+        let sx = (vw - sw) / 2;
+        let sy = (vh - sh) / 2;
+        pCtx.drawImage(mainVideo, sx, sy, sw, sh, 0, 0, cw, ch);
+      } else {
+        pCtx.fillStyle = '#000000';
+        pCtx.fillRect(0, 0, cw, ch);
+        let dw = cw, dh = ch, dx = 0, dy = 0;
+        if (vAR > cAR) {
+          dh = cw / vAR;
+          dy = (ch - dh) / 2;
+        } else {
+          dw = ch * vAR;
+          dx = (cw - dw) / 2;
+        }
+        pCtx.drawImage(mainVideo, 0, 0, vw, vh, dx, dy, dw, dh);
+      }
+
+      // 2. REALTIME OVERLAY: HEADER BANNER TITLE HOOK (TOP)
+      const isBannerActive = document.getElementById('bannerToggle').checked;
+      const bannerText = document.getElementById('bannerTextInput').value;
+
+      if (isBannerActive && bannerText) {
+        const bannerH = ch * 0.09;
+        pCtx.fillStyle = 'rgba(234, 179, 8, 0.95)';
+        pCtx.fillRect(0, 0, cw, bannerH);
+
+        const fontSize = Math.max(14, Math.round(cw * 0.038));
+        pCtx.font = `800 ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
+        pCtx.fillStyle = '#0f172a';
+        pCtx.textAlign = 'center';
+        pCtx.textBaseline = 'middle';
+        pCtx.fillText(bannerText.toUpperCase(), cw / 2, bannerH / 2);
+      }
+
+      // 3. REALTIME OVERLAY: CUSTOM WATERMARK
+      const isWatermarkActive = document.getElementById('watermarkToggle').checked;
+      const watermarkText = document.getElementById('watermarkTextInput').value || "@korporatpedia";
+      const watermarkPos = document.getElementById('watermarkPosSelect').value;
+
+      if (isWatermarkActive && watermarkText) {
+        const wmFontSize = Math.max(12, Math.round(cw * 0.028));
+        pCtx.font = `bold ${wmFontSize}px 'Plus Jakarta Sans', sans-serif`;
+        pCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+
+        let wmX = cw - 30, wmY = ch - 30;
+        if (watermarkPos === 'bottom-left') { pCtx.textAlign = 'left'; wmX = 30; }
+        else if (watermarkPos === 'bottom-right') { pCtx.textAlign = 'right'; wmX = cw - 30; }
+        else if (watermarkPos === 'top-left') { pCtx.textAlign = 'left'; wmX = 30; wmY = (isBannerActive ? ch * 0.12 : 40); }
+        else if (watermarkPos === 'top-right') { pCtx.textAlign = 'right'; wmX = cw - 30; wmY = (isBannerActive ? ch * 0.12 : 40); }
+
+        pCtx.shadowColor = 'rgba(0,0,0,0.8)';
+        pCtx.shadowBlur = 4;
+        pCtx.fillText(watermarkText, wmX, wmY);
+        pCtx.shadowBlur = 0;
+      }
+
+      // 4. REALTIME OVERLAY: SUBTITLE CAPTION TEXT (BOTTOM)
+      const isSubtitleActive = document.getElementById('subtitleToggle').checked;
+      const subtitleText = document.getElementById('customSubtitleText').value;
+      const subColor = document.getElementById('subColorSelect').value;
+      const subSizePreset = document.getElementById('subSizeSelect').value;
+
+      if (isSubtitleActive && subtitleText) {
+        let fontScale = 0.038;
+        if (subSizePreset === 'large') fontScale = 0.048;
+        if (subSizePreset === 'small') fontScale = 0.028;
+
+        const fontSize = Math.max(14, Math.round(cw * fontScale));
+        pCtx.font = `bold ${fontSize}px 'Plus Jakarta Sans', sans-serif`;
+        pCtx.textAlign = 'center';
+        pCtx.textBaseline = 'bottom';
+
+        const paddingX = 20;
+        const paddingY = 12;
+        const marginB = ch * 0.12;
+
+        const textMetrics = pCtx.measureText(subtitleText);
+        const bgWidth = Math.min(cw - 40, textMetrics.width + (paddingX * 2));
+        const bgHeight = fontSize + (paddingY * 2);
+
+        const bgX = (cw - bgWidth) / 2;
+        const bgY = ch - marginB - bgHeight;
+
+        pCtx.fillStyle = 'rgba(11, 15, 23, 0.85)';
+        pCtx.beginPath();
+        pCtx.roundRect(bgX, bgY, bgWidth, bgHeight, 12);
+        pCtx.fill();
+
+        pCtx.fillStyle = subColor;
+        pCtx.fillText(subtitleText, cw / 2, ch - marginB - paddingY);
       }
     }
 
@@ -655,22 +767,18 @@
 
       videoStageContainer.className = "relative mx-auto bg-black rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner transition-all duration-300 ";
 
-      if (ratio === '16:9') {
-        videoStageContainer.className += "frame-container-16-9";
-        mainVideo.style.objectFit = "contain";
-      } else if (ratio === '9:16') {
-        videoStageContainer.className += "frame-container-9-16";
-        mainVideo.style.objectFit = "cover";
-      } else if (ratio === '1:1') {
-        videoStageContainer.className += "frame-container-1-1";
-        mainVideo.style.objectFit = "cover";
-      }
+      if (ratio === '16:9') videoStageContainer.className += "frame-container-16-9";
+      else if (ratio === '9:16') videoStageContainer.className += "frame-container-9-16";
+      else if (ratio === '1:1') videoStageContainer.className += "frame-container-1-1";
+
+      renderFrame();
     }
 
     function stepFrame(secs) {
       if (mainVideo.src) {
         mainVideo.currentTime = Math.max(0, Math.min(mainVideo.duration, mainVideo.currentTime + secs));
         updateScrubberProgress();
+        renderFrame();
       }
     }
 
@@ -725,6 +833,7 @@
       let pos = (e.clientX - rect.left) / rect.width;
       mainVideo.currentTime = pos * mainVideo.duration;
       updateScrubberProgress();
+      renderFrame();
     }
 
     async function captureVideoKeyframes(numFrames = 4) {
@@ -954,7 +1063,9 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       const c = currentAiClips[idx];
       if (!c) return;
 
+      document.getElementById('bannerTextInput').value = c.title;
       document.getElementById('customSubtitleText').value = c.caption || c.title;
+      renderFrame();
 
       savedClips.push({
         id: Date.now(),
@@ -1101,7 +1212,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       startBtn.disabled = false;
     }
 
-    // FULL ENGINE: RENDER WITH VIDEO + BGM AUDIO MIXING + HOOK BANNER + WATERMARK + SUBTITLE
     function recordAndDownloadClipWithFolderPicker(clip, clipIndex, totalClips) {
       return new Promise((resolve) => {
         const renderCanvas = document.createElement('canvas');
@@ -1115,13 +1225,11 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
 
         const canvasStream = renderCanvas.captureStream(30);
 
-        // WEB AUDIO API AUDIO MIXER (SAFE INITIALIZATION INSIDE USER EXPORT CLICK)
         let audioCtx = null;
         try {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const audioDest = audioCtx.createMediaStreamDestination();
 
-          // 1. Connect Main Video Audio Track
           let mediaStream = null;
           if (mainVideo.captureStream) mediaStream = mainVideo.captureStream();
           else if (mainVideo.mozCaptureStream) mediaStream = mainVideo.mozCaptureStream();
@@ -1131,7 +1239,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
             videoAudioSource.connect(audioDest);
           }
 
-          // 2. Connect Background Music (BGM) Audio Track (if enabled)
           const isBgmActive = document.getElementById('bgmToggle').checked;
           if (isBgmActive && bgmAudioObject.src) {
             const bgmSource = audioCtx.createMediaElementSource(bgmAudioObject);
@@ -1145,7 +1252,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
             bgmAudioObject.play();
           }
 
-          // Merge Audio Destination into Canvas Stream Output
           if (audioDest.stream.getAudioTracks().length > 0) {
             canvasStream.addTrack(audioDest.stream.getAudioTracks()[0]);
           }
@@ -1182,7 +1288,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
 
         mainVideo.currentTime = clip.in;
 
-        // Overlay Feature Toggles
         const isBannerActive = document.getElementById('bannerToggle').checked;
         const bannerText = document.getElementById('bannerTextInput').value || clip.title;
 
@@ -1194,8 +1299,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
         const subtitleText = clip.caption || document.getElementById('customSubtitleText').value || clip.title;
         const subColor = document.getElementById('subColorSelect').value;
         const subSizePreset = document.getElementById('subSizeSelect').value;
-
-        const isMotionTrackingActive = document.getElementById('motionTrackingToggle').checked;
 
         mainVideo.onseeked = () => {
           mainVideo.onseeked = null;
@@ -1235,10 +1338,8 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
           mainVideo.play();
 
           const clipDuration = clip.out - clip.in;
-          let frameCount = 0;
 
           const drawInterval = setInterval(() => {
-            frameCount++;
             const currentProgress = mainVideo.currentTime - clip.in;
             const progressPercent = Math.min(100, Math.max(0, (currentProgress / clipDuration) * 100));
 
@@ -1253,22 +1354,15 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
             const vAR = vw / vh;
             const cAR = cw / ch;
 
-            // DRAW MAIN VIDEO FRAME WITH CROP & MOTION TRACKING
+            // EXPORT DRAWING: STABLE CENTER CROP
             if (currentRatio !== '16:9') {
               let sw = vw, sh = vh;
               if (vAR > cAR) sw = vh * cAR;
               else sh = vw / cAR;
 
-              let maxSx = vw - sw;
-              if (isMotionTrackingActive && maxSx > 0) {
-                targetCropX = (maxSx / 2) + (Math.sin(frameCount * 0.05) * (maxSx * 0.35));
-                currentCropX += (targetCropX - currentCropX) * 0.1;
-              } else {
-                currentCropX = (vw - sw) / 2;
-              }
-
+              let sx = (vw - sw) / 2;
               let sy = (vh - sh) / 2;
-              ctx.drawImage(mainVideo, currentCropX, sy, sw, sh, 0, 0, cw, ch);
+              ctx.drawImage(mainVideo, sx, sy, sw, sh, 0, 0, cw, ch);
             } else {
               ctx.fillStyle = '#000000';
               ctx.fillRect(0, 0, cw, ch);
@@ -1283,10 +1377,10 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
               ctx.drawImage(mainVideo, 0, 0, vw, vh, dx, dy, dw, dh);
             }
 
-            // 1. OVERLAY: HEADER BANNER TITLE HOOK (TOP)
+            // 1. HEADER BANNER TITLE HOOK
             if (isBannerActive && bannerText) {
               const bannerH = ch * 0.09;
-              ctx.fillStyle = 'rgba(234, 179, 8, 0.95)'; // Yellow Header Box
+              ctx.fillStyle = 'rgba(234, 179, 8, 0.95)';
               ctx.fillRect(0, 0, cw, bannerH);
 
               const fontSize = Math.max(14, Math.round(cw * 0.038));
@@ -1297,11 +1391,11 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
               ctx.fillText(bannerText.toUpperCase(), cw / 2, bannerH / 2);
             }
 
-            // 2. OVERLAY: CUSTOM WATERMARK
+            // 2. WATERMARK OVERLAY
             if (isWatermarkActive && watermarkText) {
               const wmFontSize = Math.max(12, Math.round(cw * 0.028));
               ctx.font = `bold ${wmFontSize}px 'Plus Jakarta Sans', sans-serif`;
-              ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
 
               let wmX = cw - 30, wmY = ch - 30;
               if (watermarkPos === 'bottom-left') { ctx.textAlign = 'left'; wmX = 30; }
@@ -1312,10 +1406,10 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
               ctx.shadowColor = 'rgba(0,0,0,0.8)';
               ctx.shadowBlur = 4;
               ctx.fillText(watermarkText, wmX, wmY);
-              ctx.shadowBlur = 0; // Reset Shadow
+              ctx.shadowBlur = 0;
             }
 
-            // 3. OVERLAY: SUBTITLE / CAPTION TEXT (BOTTOM)
+            // 3. SUBTITLE CAPTION TEXT
             if (isSubtitleActive && subtitleText) {
               let fontScale = 0.038;
               if (subSizePreset === 'large') fontScale = 0.048;
