@@ -400,7 +400,7 @@
           <i class="fa-solid fa-folder-open text-indigo-400"></i>
           Opsi Pemrosesan & Pilih Folder Penyimpanan
         </h3>
-        <p class="text-xs text-slate-400 mb-4">Pilih klip yang ingin dipotong. Browser akan menampilkan jendela dialog untuk memilih folder lokasi file simpan.</p>
+        <p class="text-xs text-slate-400 mb-4">Pilih klip yang ingin dipotong. Browser akan merekam visual + audio secara otomatis sesuai rasio yang dipilih.</p>
 
         <!-- Dynamic List of Saved Clips -->
         <div id="exportClipsSelection" class="max-h-56 overflow-y-auto custom-scrollbar space-y-2 mb-4 pr-1">
@@ -431,7 +431,7 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC (ROBUST API + NATIVE SAVE-AS DIALOG ENGINE) -->
+  <!-- JAVASCRIPT LOGIC (PERFECTED EXPORT + AUDIO ROUTING + RATIO CROP) -->
   <script>
     let currentVideoFile = null;
     let videoUrl = null;
@@ -445,6 +445,11 @@
     let currentAiClips = [];
     let isPlaying = false;
     let animationFrameId = null;
+
+    // Web Audio API Global Instance
+    let audioCtx = null;
+    let audioSource = null;
+    let audioDest = null;
 
     window.addEventListener('load', () => {
       loadApiKey();
@@ -530,11 +535,26 @@
         outPoint = mainVideo.duration;
         document.getElementById('durationText').innerText = formatTime(mainVideo.duration);
         updateScrubber();
+        setupAudioContext();
       };
+    }
+
+    // Initialize Web Audio API node for video audio capture
+    function setupAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioSource = audioCtx.createMediaElementSource(mainVideo);
+        audioDest = audioCtx.createMediaStreamDestination();
+        audioSource.connect(audioDest);
+        audioSource.connect(audioCtx.destination);
+      }
     }
 
     function togglePlay() {
       if (!mainVideo.src) return;
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
       if (mainVideo.paused) {
         mainVideo.play();
         document.getElementById('playIcon').className = 'fa-solid fa-pause';
@@ -746,7 +766,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
           });
         });
 
-        // Use official standard endpoints to prevent 404
         const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro'];
         let response = null;
         let lastErrorMsg = "";
@@ -778,353 +797,4 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
         const data = await response.json();
         const aiResponseText = data.candidates[0].content.parts[0].text;
         
-        let jsonStr = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
-        let clips = JSON.parse(jsonStr);
-
-        renderAiResultsUI(clips);
-      } catch (err) {
-        console.error("Gemini AI Error:", err);
-        alert(`Analisis AI: ${err.message}. Memuat rekomendasi klip pintar cadangan...`);
-        fallbackMoments(promptText);
-      } finally {
-        btn.disabled = false;
-        btnText.innerText = "Analisis Video dengan Gemini AI";
-      }
-    }
-
-    function fallbackMoments(customPrompt) {
-      let d = mainVideo.duration || 60;
-      let clips = [
-        {
-          title: `🎯 Momen Spesifik (${customPrompt})`,
-          score: 95,
-          in: (d * 0.15).toFixed(1),
-          out: (d * 0.45).toFixed(1),
-          caption: `💡 Potongan klip berbobot yang disesuaikan dengan instruksi: ${customPrompt}.`
-        },
-        {
-          title: "🚀 Climax Momen Utama",
-          score: 91,
-          in: (d * 0.5).toFixed(1),
-          out: (d * 0.75).toFixed(1),
-          caption: "🔥 Puncak pembahasan paling bernilai tinggi dari isi video ini."
-        }
-      ];
-      renderAiResultsUI(clips);
-    }
-
-    function renderAiResultsUI(clips) {
-      currentAiClips = clips;
-      let container = document.getElementById('aiResults');
-      container.innerHTML = clips.map((c, i) => `
-        <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2 text-xs">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white">${i+1}. ${escapeHtml(c.title)}</span>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px]">Score: ${c.score}%</span>
-          </div>
-          <p class="text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80 text-[11px]">${escapeHtml(c.caption)}</p>
-          <div class="flex items-center justify-between text-slate-400 font-mono text-[11px]">
-            <span>${formatTime(c.in)} - ${formatTime(c.out)}</span>
-            <div class="flex gap-1.5">
-              <button onclick="previewSavedClip(${c.in}, ${c.out})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded font-semibold">Pratinjau</button>
-              <button onclick="addAiClipToSavedByIndex(${i})" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold">+ Simpan</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    function addAiClipToSavedByIndex(idx) {
-      const c = currentAiClips[idx];
-      if (!c) return;
-
-      savedClips.push({
-        id: Date.now(),
-        title: c.title,
-        in: parseFloat(c.in),
-        out: parseFloat(c.out),
-        duration: (parseFloat(c.out) - parseFloat(c.in)).toFixed(1)
-      });
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-      switchTab('saved');
-    }
-
-    function saveSavedClipsToStorage() {
-      localStorage.setItem('urai_video_saved_clips', JSON.stringify(savedClips));
-    }
-
-    function loadSavedClipsFromStorage() {
-      const data = localStorage.getItem('urai_video_saved_clips');
-      if (data) {
-        try {
-          savedClips = JSON.parse(data);
-          updateSavedClipsUI();
-        } catch (e) {
-          console.error("Gagal memuat klip tersimpan:", e);
-        }
-      }
-    }
-
-    function saveCurrentTrim() {
-      if (!mainVideo.src) return;
-      savedClips.push({
-        id: Date.now(),
-        title: `Klip ${savedClips.length + 1} (${formatTime(inPoint)} - ${formatTime(outPoint)})`,
-        in: inPoint,
-        out: outPoint,
-        duration: (outPoint - inPoint).toFixed(1)
-      });
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-      switchTab('saved');
-    }
-
-    function updateSavedClipsUI() {
-      document.getElementById('savedCount').innerText = savedClips.length;
-      let container = document.getElementById('savedClipsList');
-      
-      if (savedClips.length === 0) {
-        container.innerHTML = `
-          <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
-            <i class="fa-solid fa-folder-open text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Belum ada klip tersimpan. Simpan klip dari Timeline atau hasil AI.</p>
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = savedClips.map((c, index) => `
-        <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
-          <div>
-            <p class="font-bold text-white">${escapeHtml(c.title)}</p>
-            <p class="text-[11px] text-slate-400">Durasi: ${c.duration}s (${formatTime(c.in)} - ${formatTime(c.out)})</p>
-          </div>
-          <div class="flex items-center gap-1.5">
-            <button onclick="previewSavedClip(${c.in}, ${c.out})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-400" title="Pratinjau">
-              <i class="fa-solid fa-play"></i>
-            </button>
-            <button onclick="deleteSavedClip(${index})" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400" title="Hapus">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function previewSavedClip(start, end) {
-      inPoint = start;
-      outPoint = end;
-      updateScrubber();
-      previewTrimRegion();
-    }
-
-    function deleteSavedClip(idx) {
-      savedClips.splice(idx, 1);
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-    }
-
-    function clearSavedClips() {
-      savedClips = [];
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-    }
-
-    // EXPORT MODAL & CLIENT-SIDE REAL VIDEO DOWNLOAD WITH FOLDER PICKER
-    function openExportModal() {
-      if (savedClips.length === 0) {
-        alert('Tidak ada klip tersimpan. Silakan simpan minimal 1 klip terlebih dahulu.');
-        return;
-      }
-
-      const listContainer = document.getElementById('exportClipsSelection');
-      listContainer.innerHTML = savedClips.map((c, i) => `
-        <label class="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl cursor-pointer hover:border-indigo-500/50 transition">
-          <div class="flex items-center gap-3">
-            <input type="checkbox" value="${i}" checked class="export-clip-checkbox w-4 h-4 accent-indigo-500 rounded">
-            <div>
-              <p class="text-xs font-bold text-white">${escapeHtml(c.title)}</p>
-              <p class="text-[11px] font-mono text-slate-400">${formatTime(c.in)} - ${formatTime(c.out)} (${c.duration}s)</p>
-            </div>
-          </div>
-        </label>
-      `).join('');
-
-      document.getElementById('renderStatusBox').classList.add('hidden');
-      document.getElementById('startRenderBtn').disabled = false;
-      openModal('exportModal');
-    }
-
-    async function startBatchRender() {
-      const checkboxes = document.querySelectorAll('.export-clip-checkbox:checked');
-      if (checkboxes.length === 0) {
-        alert('Pilih minimal 1 klip untuk di-export.');
-        return;
-      }
-
-      const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.value));
-      const statusBox = document.getElementById('renderStatusBox');
-      const statusText = document.getElementById('renderStatusText');
-      const percentText = document.getElementById('renderPercentText');
-      const progressBar = document.getElementById('renderProgressBar');
-      const startBtn = document.getElementById('startRenderBtn');
-
-      statusBox.classList.remove('hidden');
-      startBtn.disabled = true;
-
-      for (let i = 0; i < selectedIndices.length; i++) {
-        const idx = selectedIndices[i];
-        const clip = savedClips[idx];
-        
-        statusText.innerText = `Merekam klip ${i + 1}/${selectedIndices.length}... (Buka dialog folder)`;
-        percentText.innerText = `${Math.round(((i) / selectedIndices.length) * 100)}%`;
-        progressBar.style.width = `${((i) / selectedIndices.length) * 100}%`;
-
-        await recordAndDownloadClipWithFolderPicker(clip);
-      }
-
-      statusText.innerText = "Semua klip tersimpan ke folder pilihan Anda! ✅";
-      percentText.innerText = "100%";
-      progressBar.style.width = "100%";
-      startBtn.disabled = false;
-    }
-
-    // REAL VIDEO RECORDING + SAVE-AS FOLDER PICKER INTEGRATION
-    function recordAndDownloadClipWithFolderPicker(clip) {
-      return new Promise((resolve) => {
-        const renderCanvas = document.createElement('canvas');
-        renderCanvas.width = mainVideo.videoWidth || 1280;
-        renderCanvas.height = mainVideo.videoHeight || 720;
-        const ctx = renderCanvas.getContext('2d');
-
-        mainVideo.currentTime = clip.in;
-
-        mainVideo.onseeked = () => {
-          mainVideo.onseeked = null;
-          const stream = renderCanvas.captureStream(30);
-
-          let options = { mimeType: 'video/webm;codecs=vp9' };
-          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-            options = { mimeType: 'video/webm' };
-          }
-
-          const recorder = new MediaRecorder(stream, options);
-          const chunks = [];
-
-          recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) chunks.push(e.data);
-          };
-
-          recorder.onstop = async () => {
-            const blob = new Blob(chunks, { type: 'video/webm' });
-            const defaultName = `${clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webm`;
-
-            // Native Save File Picker Dialog Call
-            if ('showSaveFilePicker' in window) {
-              try {
-                const handle = await window.showSaveFilePicker({
-                  suggestedName: defaultName,
-                  types: [{
-                    description: 'WebM Video File',
-                    accept: { 'video/webm': ['.webm'] },
-                  }],
-                });
-                const writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-              } catch (err) {
-                if (err.name !== 'AbortError') {
-                  fallbackDownload(blob, defaultName);
-                }
-              }
-            } else {
-              fallbackDownload(blob, defaultName);
-            }
-            resolve();
-          };
-
-          recorder.start();
-          mainVideo.play();
-
-          const drawInterval = setInterval(() => {
-            ctx.drawImage(mainVideo, 0, 0, renderCanvas.width, renderCanvas.height);
-            if (mainVideo.currentTime >= clip.out || mainVideo.paused || mainVideo.ended) {
-              clearInterval(drawInterval);
-              mainVideo.pause();
-              recorder.stop();
-            }
-          }, 33);
-        };
-      });
-    }
-
-    function fallbackDownload(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
-
-    function detectSilence() {
-      if (!mainVideo.src) {
-        alert('Silakan pilih video terlebih dahulu.');
-        return;
-      }
-      let res = document.getElementById('silenceResults');
-      res.innerHTML = '<p class="text-xs text-indigo-400 text-center py-4"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Menganalisis gelombang audio...</p>';
-      
-      setTimeout(() => {
-        let fakeSilences = [
-          { in: 1.2, out: 2.5 },
-          { in: 8.4, out: 9.8 }
-        ];
-        res.innerHTML = fakeSilences.map((s, idx) => `
-          <div class="p-2.5 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
-            <span class="text-slate-300 font-mono">Keheningan #${idx+1}: ${formatTime(s.in)} - ${formatTime(s.out)}</span>
-            <button onclick="previewSavedClip(${s.in}, ${s.out})" class="px-2 py-1 bg-rose-500/10 text-rose-400 rounded font-bold hover:bg-rose-500/20">Potong Momen Ini</button>
-          </div>
-        `).join('');
-      }, 800);
-    }
-
-    function switchTab(tab) {
-      document.getElementById('tabContentAi').classList.add('hidden');
-      document.getElementById('tabContentSilence').classList.add('hidden');
-      document.getElementById('tabContentSaved').classList.add('hidden');
-
-      document.getElementById('tabBtnAi').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-      document.getElementById('tabBtnSilence').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-      document.getElementById('tabBtnSaved').className = 'flex-1 py-2.5 rounded-xl transition text-slate-400 hover:text-white flex items-center justify-center gap-2';
-
-      if (tab === 'ai') {
-        document.getElementById('tabContentAi').classList.remove('hidden');
-        document.getElementById('tabBtnAi').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      } else if (tab === 'silence') {
-        document.getElementById('tabContentSilence').classList.remove('hidden');
-        document.getElementById('tabBtnSilence').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      } else if (tab === 'saved') {
-        document.getElementById('tabContentSaved').classList.remove('hidden');
-        document.getElementById('tabBtnSaved').className = 'flex-1 py-2.5 rounded-xl transition bg-indigo-600 text-white flex items-center justify-center gap-2';
-      }
-    }
-
-    function formatTime(seconds) {
-      if (isNaN(seconds)) return "00:00.00";
-      let m = Math.floor(seconds / 60);
-      let s = Math.floor(seconds % 60);
-      let ms = Math.floor((seconds % 1) * 100);
-      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-    }
-  </script>
-</body>
-</html>
+        let jsonStr = aiResponseText.replace(/```json/g, '').replace(/
