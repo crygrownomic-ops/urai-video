@@ -79,7 +79,7 @@
         </button>
 
         <!-- Export Klip -->
-        <button onclick="exportBatchClips()" class="flex items-center gap-2 px-4 py-2 rounded-xl gradient-bg text-white font-bold shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-105 active:scale-95">
+        <button onclick="openExportModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl gradient-bg text-white font-bold shadow-lg shadow-indigo-500/25 transition-all transform hover:scale-105 active:scale-95">
           <i class="fa-solid fa-download"></i>
           <span>Export Klip</span>
         </button>
@@ -238,7 +238,7 @@
           <div class="flex items-center justify-between">
             <label class="text-xs font-semibold text-slate-300">Instruksi AI Custom:</label>
           </div>
-          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: cari moment yang menyentuh"></textarea>
+          <textarea id="aiPrompt" rows="3" class="w-full bg-slate-900 text-slate-200 text-xs rounded-xl p-3 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Contoh: cari moment yang penuh dengan ilmu"></textarea>
         </div>
 
         <button onclick="analyzeVideoWithAI()" id="aiAnalyzeBtn" class="w-full py-3 rounded-xl gradient-bg text-white font-bold text-xs shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition transform active:scale-95">
@@ -250,7 +250,7 @@
         <div id="aiResults" class="flex-grow overflow-y-auto max-h-[420px] custom-scrollbar flex flex-col gap-3 pr-1">
           <div class="p-6 text-center border border-dashed border-slate-800 rounded-xl">
             <i class="fa-solid fa-robot text-slate-600 text-3xl mb-2"></i>
-            <p class="text-xs text-slate-400">Unggah video, tulis instruksi di atas (misal: <i>"cari moment yang menyentuh"</i>), lalu klik <b>Analisis Video</b>.</p>
+            <p class="text-xs text-slate-400">Unggah video, tulis instruksi di atas, lalu klik <b>Analisis Video</b>.</p>
           </div>
         </div>
       </div>
@@ -355,7 +355,7 @@
         </button>
       </div>
     </div>
-  </div>
+  </footer>
 
   <!-- MODAL: GEMINI API KEY -->
   <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -388,7 +388,50 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC WITH TIMEOUT-PROTECTED KEYFRAME EXTRACTION -->
+  <!-- MODAL: EXPORT VIDEO OPTIONS -->
+  <div id="exportModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full rounded-2xl p-6 border border-slate-700 shadow-2xl relative">
+      <button onclick="closeModal('exportModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div>
+        <h3 class="text-base font-bold text-white flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-file-video text-indigo-400"></i>
+          Opsi Pemrosesan & Render Video Klip
+        </h3>
+        <p class="text-xs text-slate-400 mb-4">Pilih klip tersimpan yang ingin dipotong dan diunduh ke perangkat Anda.</p>
+
+        <!-- Dynamic List of Saved Clips -->
+        <div id="exportClipsSelection" class="max-h-56 overflow-y-auto custom-scrollbar space-y-2 mb-4 pr-1">
+          <!-- Dynamically Rendered -->
+        </div>
+
+        <!-- Render Progress Status -->
+        <div id="renderStatusBox" class="hidden bg-slate-900 p-3 rounded-xl border border-slate-800 mb-4 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span id="renderStatusText" class="text-indigo-400 font-bold">Merekam klip video...</span>
+            <span id="renderPercentText" class="font-mono text-slate-300">0%</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="renderProgressBar" class="h-full gradient-bg w-0 transition-all duration-200"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="startBatchRender()" id="startRenderBtn" class="flex-1 py-3 rounded-xl gradient-bg text-white font-bold text-xs shadow-lg shadow-indigo-500/20 transition transform active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-download"></i>
+            <span>Unduh Klip Terpilih</span>
+          </button>
+          <button onclick="closeModal('exportModal')" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700 transition">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC (FIXED AI SAVE & REAL EXPORT ENGINE) -->
   <script>
     let currentVideoFile = null;
     let videoUrl = null;
@@ -399,6 +442,7 @@
     let inPoint = 0;
     let outPoint = 0;
     let savedClips = [];
+    let currentAiClips = []; // Temporary holding array for AI results
     let isPlaying = false;
     let animationFrameId = null;
 
@@ -611,7 +655,6 @@
         try {
           await new Promise((resolve) => {
             let resolved = false;
-            // Timeout safety net (1.2s max per frame)
             const timer = setTimeout(() => {
               if (!resolved) {
                 resolved = true;
@@ -645,7 +688,7 @@
       return keyframes;
     }
 
-    // MULTIMODAL AI INTEGRATION
+    // MULTIMODAL AI INTEGRATION WITH AUTOMATIC MODEL FALLBACK
     async function analyzeVideoWithAI() {
       if (!mainVideo.src) {
         alert("Silakan unggah file video terlebih dahulu.");
@@ -667,11 +710,9 @@
       btnText.innerText = "Memindai cuplikan gambar video...";
 
       try {
-        // 1. Capture frames with safety timeout
         const keyframes = await captureVideoKeyframes(4);
         btnText.innerText = "Menganalisis dengan Gemini AI...";
 
-        // 2. Build Payload
         const parts = [];
         parts.push({
           text: `Anda adalah editor video AI profesional. 
@@ -704,15 +745,32 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
           });
         });
 
-        // 3. Call Gemini API
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: parts }] })
-        });
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+        let response = null;
+        let lastErrorMsg = "";
 
-        if (!response.ok) {
-          throw new Error(`Gemini API Response Code ${response.status}`);
+        for (let modelName of modelsToTry) {
+          try {
+            btnText.innerText = `Menghubungkan AI (${modelName})...`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: parts }] })
+            });
+
+            if (res.ok) {
+              response = res;
+              break;
+            } else {
+              lastErrorMsg = `HTTP Code ${res.status}`;
+            }
+          } catch (e) {
+            lastErrorMsg = e.message;
+          }
+        }
+
+        if (!response) {
+          throw new Error(lastErrorMsg || "Model tidak merespons");
         }
 
         const data = await response.json();
@@ -753,24 +811,47 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       renderAiResultsUI(clips);
     }
 
+    // FIXED: Render UI with index reference to avoid quote syntax errors
     function renderAiResultsUI(clips) {
+      currentAiClips = clips; // Save in global state
       let container = document.getElementById('aiResults');
       container.innerHTML = clips.map((c, i) => `
         <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-2 text-xs">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-white">${i+1}. ${c.title}</span>
+            <span class="font-bold text-white">${i+1}. ${escapeHtml(c.title)}</span>
             <span class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px]">Score: ${c.score}%</span>
           </div>
-          <p class="text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80 text-[11px]">${c.caption}</p>
+          <p class="text-slate-300 bg-slate-950/60 p-2 rounded-lg border border-slate-800/80 text-[11px]">${escapeHtml(c.caption)}</p>
           <div class="flex items-center justify-between text-slate-400 font-mono text-[11px]">
             <span>${formatTime(c.in)} - ${formatTime(c.out)}</span>
             <div class="flex gap-1.5">
               <button onclick="previewSavedClip(${c.in}, ${c.out})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded font-semibold">Pratinjau</button>
-              <button onclick="addAiClipToSaved('${c.title}', ${c.in}, ${c.out})" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold">+ Simpan</button>
+              <button onclick="addAiClipToSavedByIndex(${i})" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-bold">+ Simpan</button>
             </div>
           </div>
         </div>
       `).join('');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function addAiClipToSavedByIndex(idx) {
+      const c = currentAiClips[idx];
+      if (!c) return;
+
+      savedClips.push({
+        id: Date.now(),
+        title: c.title,
+        in: parseFloat(c.in),
+        out: parseFloat(c.out),
+        duration: (parseFloat(c.out) - parseFloat(c.in)).toFixed(1)
+      });
+      saveSavedClipsToStorage();
+      updateSavedClipsUI();
+      switchTab('saved');
     }
 
     function saveSavedClipsToStorage() {
@@ -787,19 +868,6 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
           console.error("Gagal memuat klip tersimpan:", e);
         }
       }
-    }
-
-    function addAiClipToSaved(title, inP, outP) {
-      savedClips.push({
-        id: Date.now(),
-        title: title,
-        in: parseFloat(inP),
-        out: parseFloat(outP),
-        duration: (outP - inP).toFixed(1)
-      });
-      saveSavedClipsToStorage();
-      updateSavedClipsUI();
-      switchTab('saved');
     }
 
     function saveCurrentTrim() {
@@ -833,7 +901,7 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       container.innerHTML = savedClips.map((c, index) => `
         <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-between text-xs">
           <div>
-            <p class="font-bold text-white">${c.title}</p>
+            <p class="font-bold text-white">${escapeHtml(c.title)}</p>
             <p class="text-[11px] text-slate-400">Durasi: ${c.duration}s (${formatTime(c.in)} - ${formatTime(c.out)})</p>
           </div>
           <div class="flex items-center gap-1.5">
@@ -867,12 +935,131 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       updateSavedClipsUI();
     }
 
-    function exportBatchClips() {
+    // EXPORT MODAL & CLIENT-SIDE REAL VIDEO DOWNLOAD ENGINE
+    function openExportModal() {
       if (savedClips.length === 0) {
-        alert('Tidak ada klip tersimpan untuk di-export.');
+        alert('Tidak ada klip tersimpan. Silakan simpan minimal 1 klip terlebih dahulu.');
         return;
       }
-      alert(`Memulai render & export ${savedClips.length} klip secara otomatis...`);
+
+      const listContainer = document.getElementById('exportClipsSelection');
+      listContainer.innerHTML = savedClips.map((c, i) => `
+        <label class="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl cursor-pointer hover:border-indigo-500/50 transition">
+          <div class="flex items-center gap-3">
+            <input type="checkbox" value="${i}" checked class="export-clip-checkbox w-4 h-4 accent-indigo-500 rounded">
+            <div>
+              <p class="text-xs font-bold text-white">${escapeHtml(c.title)}</p>
+              <p class="text-[11px] font-mono text-slate-400">${formatTime(c.in)} - ${formatTime(c.out)} (${c.duration}s)</p>
+            </div>
+          </div>
+        </label>
+      `).join('');
+
+      document.getElementById('renderStatusBox').classList.add('hidden');
+      document.getElementById('startRenderBtn').disabled = false;
+      openModal('exportModal');
+    }
+
+    async function startBatchRender() {
+      const checkboxes = document.querySelectorAll('.export-clip-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert('Pilih minimal 1 klip untuk di-export.');
+        return;
+      }
+
+      const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.value));
+      const statusBox = document.getElementById('renderStatusBox');
+      const statusText = document.getElementById('renderStatusText');
+      const percentText = document.getElementById('renderPercentText');
+      const progressBar = document.getElementById('renderProgressBar');
+      const startBtn = document.getElementById('startRenderBtn');
+
+      statusBox.classList.remove('hidden');
+      startBtn.disabled = true;
+
+      for (let i = 0; i < selectedIndices.length; i++) {
+        const idx = selectedIndices[i];
+        const clip = savedClips[idx];
+        
+        statusText.innerText = `Memproses & Mengunduh Klip ${i + 1}/${selectedIndices.length}...`;
+        percentText.innerText = `${Math.round(((i) / selectedIndices.length) * 100)}%`;
+        progressBar.style.width = `${((i) / selectedIndices.length) * 100}%`;
+
+        await recordAndDownloadClip(clip);
+      }
+
+      statusText.innerText = "Semua klip berhasil diunduh! ✅";
+      percentText.innerText = "100%";
+      progressBar.style.width = "100%";
+      startBtn.disabled = false;
+    }
+
+    // REAL CLIENT-SIDE VIDEO RECORDING VIA MEDIARECORDER + CANVAS STREAM
+    function recordAndDownloadClip(clip) {
+      return new Promise((resolve) => {
+        const renderCanvas = document.createElement('canvas');
+        renderCanvas.width = mainVideo.videoWidth || 1280;
+        renderCanvas.height = mainVideo.videoHeight || 720;
+        const ctx = renderCanvas.getContext('2d');
+
+        mainVideo.currentTime = clip.in;
+
+        mainVideo.onseeked = () => {
+          mainVideo.onseeked = null;
+
+          const stream = renderCanvas.captureStream(30);
+          
+          // Audio Stream Handling
+          try {
+            if (mainVideo.captureStream || mainVideo.mozCaptureStream) {
+              const videoStream = mainVideo.captureStream ? mainVideo.captureStream() : mainVideo.mozCaptureStream();
+              const audioTracks = videoStream.getAudioTracks();
+              if (audioTracks.length > 0) {
+                stream.addTrack(audioTracks[0]);
+              }
+            }
+          } catch(e) {
+            console.warn("Audio capture not fully supported, recording video stream:", e);
+          }
+
+          let options = { mimeType: 'video/webm;codecs=vp9' };
+          if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options = { mimeType: 'video/webm' };
+          }
+
+          const recorder = new MediaRecorder(stream, options);
+          const chunks = [];
+
+          recorder.ondataavailable = (e) => {
+            if (e.data.size > 0) chunks.push(e.data);
+          };
+
+          recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${clip.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            resolve();
+          };
+
+          recorder.start();
+          mainVideo.play();
+
+          const drawInterval = setInterval(() => {
+            ctx.drawImage(mainVideo, 0, 0, renderCanvas.width, renderCanvas.height);
+            if (mainVideo.currentTime >= clip.out || mainVideo.paused || mainVideo.ended) {
+              clearInterval(drawInterval);
+              mainVideo.pause();
+              recorder.stop();
+            }
+          }, 33);
+        };
+      });
     }
 
     function detectSilence() {
