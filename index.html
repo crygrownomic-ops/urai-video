@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Urai Video Studio - Realtime Interactive Editor</title>
+  <title>Urai Video Studio - Auto Subtitle & AI Trim Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
     .frame-container-9-16 { aspect-ratio: 9/16; height: 460px; max-width: 100%; }
     .frame-container-1-1  { aspect-ratio: 1/1;  height: 440px; max-width: 100%; }
 
-    /* Custom Dual Range Slider Styling */
+    /* Custom Dual Range Slider */
     .range-slider-container {
       position: relative;
       width: 100%;
@@ -77,7 +77,7 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-xl font-extrabold tracking-tight text-white">Urai Video Studio</h1>
-            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Realtime Editor</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Auto Subtitle AI</span>
           </div>
           <p class="text-xs text-slate-400">Karya: <span class="font-semibold text-slate-200">Urai Ikhsan Fadhilah</span> • Multimodal AI Video Studio</p>
         </div>
@@ -106,7 +106,7 @@
   <!-- Main Workspace Layout -->
   <main class="w-full px-4 md:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
     
-    <!-- LEFT PANEL: Realtime Video Player & Drag Scrubber (7 Cols) -->
+    <!-- LEFT PANEL: Video Player Stage (7 Cols) -->
     <section class="lg:col-span-7 flex flex-col gap-4">
       
       <!-- Upload Card -->
@@ -130,7 +130,7 @@
         </label>
       </div>
 
-      <!-- Realtime Video Player Stage with Live HTML Overlay -->
+      <!-- Realtime Video Player Stage with Live Overlay -->
       <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden min-h-[460px]">
         
         <!-- Framing Ratio Selector -->
@@ -143,35 +143,35 @@
           </div>
         </div>
 
-        <!-- Video Viewport & Realtime HTML/CSS Overlay Container -->
+        <!-- Video Viewport & Realtime HTML Overlay Container -->
         <div id="videoStageContainer" class="relative mx-auto bg-black rounded-xl overflow-hidden flex items-center justify-center border border-slate-800 shadow-inner frame-container-16-9 transition-all duration-300">
           
           <video id="mainVideo" class="w-full h-full object-contain hidden" crossorigin="anonymous" playsinline ontimeupdate="onVideoTimeUpdate()"></video>
 
-          <!-- LIVE REALTIME OVERLAY 1: HEADER TITLE BANNER -->
+          <!-- LIVE OVERLAY 1: HEADER BANNER HOOK -->
           <div id="liveHeaderBanner" class="absolute top-0 left-0 right-0 bg-amber-500 text-slate-950 font-extrabold text-center py-2 px-3 text-sm md:text-base uppercase shadow-md z-30 hidden">
             <span id="liveHeaderBannerText">JUDUL BANNER HOOK AKAN TAMPIL DI SINI</span>
           </div>
 
-          <!-- LIVE REALTIME OVERLAY 2: CUSTOM WATERMARK -->
+          <!-- LIVE OVERLAY 2: CUSTOM WATERMARK -->
           <div id="liveWatermark" class="absolute font-bold text-xs text-white/80 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] z-30 hidden bottom-4 right-4">
             <span id="liveWatermarkText">@korporatpedia</span>
           </div>
 
-          <!-- LIVE REALTIME OVERLAY 3: SUBTITLE CAPTION PILL -->
+          <!-- LIVE OVERLAY 3: SUBTITLE CAPTION -->
           <div id="liveSubtitleContainer" class="absolute bottom-10 left-4 right-4 flex justify-center z-30 hidden">
             <div class="bg-slate-950/85 text-yellow-400 font-bold px-4 py-2 rounded-xl text-center text-xs md:text-sm max-w-[90%] border border-slate-800/60 shadow-xl">
               <span id="liveSubtitleText">Teks Subtitle lirik otomatis akan muncul di sini...</span>
             </div>
           </div>
 
-          <!-- Placeholder Dropzone -->
+          <!-- Placeholder -->
           <div id="playerPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-slate-950/90 z-40">
             <div class="w-20 h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-4 text-indigo-400 shadow-xl">
               <i class="fa-solid fa-film text-3xl"></i>
             </div>
             <h3 class="text-lg font-extrabold text-white mb-1">Urai Video Studio</h3>
-            <p class="text-xs text-slate-400 max-w-sm mb-5">Unggah video kamu, pilih area potong interaktif, atau berikan instruksi ke Gemini AI.</p>
+            <p class="text-xs text-slate-400 max-w-sm mb-5">Unggah video kamu, gunakan pemotong manual interaktif, atau buat subtitle otomatis dari suara video.</p>
             <label class="cursor-pointer px-5 py-2.5 rounded-xl gradient-bg text-white text-xs font-bold shadow-lg shadow-indigo-500/25 transition">
               <input type="file" accept="video/*" class="hidden" onchange="handleFileSelect(event)">
               <i class="fa-solid fa-plus mr-1.5"></i> Unggah Video Lokal
@@ -187,20 +187,17 @@
             <span>Out: <b id="outTimeDisplay" class="text-rose-400">00:00.00</b></span>
           </div>
 
-          <!-- Interactive Track Container -->
           <div class="relative w-full h-4 bg-slate-900 rounded-full border border-slate-800 flex items-center overflow-hidden">
-            <!-- Active Selection Range Bar -->
             <div id="inOutRangeBar" class="absolute top-0 bottom-0 bg-indigo-500/30 border-x-2 border-indigo-400"></div>
-            <!-- Playhead Progress Indicator -->
             <div id="progressBar" class="absolute top-0 bottom-0 left-0 bg-indigo-500 w-0 opacity-80 pointer-events-none"></div>
           </div>
 
-          <!-- Range Sliders for Drag Trim Manual -->
+          <!-- Dual Sliders for Manual Drag Trim -->
           <div class="range-slider-container -mt-4">
             <input type="range" id="dragInSlider" min="0" max="100" step="0.1" value="0" oninput="handleDragIn(this.value)">
             <input type="range" id="dragOutSlider" min="0" max="100" step="0.1" value="100" oninput="handleDragOut(this.value)">
           </div>
-          <p class="text-[10px] text-slate-500 text-center font-medium">💡 Drag slider di atas garis waktu untuk mengatur batas awal & akhir pemotongan klip secara manual.</p>
+          <p class="text-[10px] text-slate-500 text-center font-medium">💡 Drag slider di atas garis waktu untuk mengedit posisi pemotongan klip secara manual.</p>
         </div>
       </div>
 
@@ -296,14 +293,31 @@
         </div>
       </div>
 
-      <!-- TAB 2: CUSTOM STUDIO (REALTIME CONTROLS) -->
+      <!-- TAB 2: CUSTOM STUDIO & AUTO SUBTITLE GENERATOR -->
       <div id="tabContentEffects" class="glass-card rounded-2xl p-5 flex flex-col gap-4 border border-slate-800 hidden flex-grow overflow-y-auto max-h-[560px] custom-scrollbar">
         <div>
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-palette text-indigo-400"></i>
-            Pengaturan Overlay Studio & Subtitle Teks
+            <i class="fa-solid fa-closed-captioning text-indigo-400"></i>
+            Subtitle Otomatis & Custom Studio
           </h2>
-          <p class="text-xs text-slate-400 mt-1">Ubah opsi di bawah ini untuk melihat pratinjau teks & watermark secara langsung di layar video.</p>
+          <p class="text-xs text-slate-400 mt-1">Generate subtitle otomatis dari suara video atau edit posisi watermark dan banner.</p>
+        </div>
+
+        <!-- FITUR UTAMA: AUTO SPEECH-TO-TEXT SUBTITLE GENERATOR -->
+        <div class="p-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-xs text-indigo-300 flex items-center gap-2">
+              <i class="fa-solid fa-microphone-lines text-indigo-400"></i>
+              Transkripsi Subtitle Otomatis (Speech AI)
+            </span>
+            <span id="sttStatusBadge" class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-bold">Siap</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Klik tombol di bawah ini. Browser akan mendengarkan suara video dan langsung mengubah ucapan menjadi teks subtitle secara otomatis.</p>
+          
+          <button onclick="startAutoSubtitleSpeechToText()" id="autoSubBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-indigo-600/20 transition">
+            <i class="fa-solid fa-closed-captioning"></i>
+            <span id="autoSubBtnText">🎙️ Transkrip Subtitle dari Suara Video</span>
+          </button>
         </div>
 
         <div class="space-y-4 text-xs">
@@ -312,7 +326,7 @@
             <div class="flex items-center justify-between">
               <div>
                 <p class="font-bold text-white">1. Banner Title Hook (Atas Video)</p>
-                <p class="text-[11px] text-slate-400">Kotak teks judul statis di bagian atas video.</p>
+                <p class="text-[11px] text-slate-400">Judul banner statis di bagian atas video.</p>
               </div>
               <input type="checkbox" id="bannerToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer" onchange="updateRealtimeOverlays()">
             </div>
@@ -339,12 +353,12 @@
             </div>
           </div>
 
-          <!-- 3. CUSTOM SUBTITLE STYLE & REALTIME TEXT -->
+          <!-- 3. CUSTOM SUBTITLE STYLE & EDIT TEXT -->
           <div class="p-3.5 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-bold text-white">3. Gaya Subtitle / Lirik Teks</p>
-                <p class="text-[11px] text-slate-400">Atur tampilan subtitle otomatis di layar video.</p>
+                <p class="font-bold text-white">3. Teks Subtitle / Caption Video</p>
+                <p class="text-[11px] text-slate-400">Teks ini akan otomatis terisi saat transkrip selesai, atau bisa di-edit manual.</p>
               </div>
               <input type="checkbox" id="subtitleToggle" checked class="w-5 h-5 accent-indigo-500 cursor-pointer" onchange="updateRealtimeOverlays()">
             </div>
@@ -366,7 +380,7 @@
                 </select>
               </div>
             </div>
-            <textarea id="customSubtitleText" rows="2" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Masukkan teks subtitle/lirik di sini..." oninput="updateRealtimeOverlays()"></textarea>
+            <textarea id="customSubtitleText" rows="3" class="w-full bg-slate-950 text-slate-200 text-xs rounded-lg p-2.5 border border-slate-800 focus:outline-none focus:border-indigo-500 resize-none" placeholder="Teks subtitle ucapan video akan muncul otomatis di sini..." oninput="updateRealtimeOverlays()"></textarea>
           </div>
 
           <!-- 4. BACKGROUND MUSIC (BGM) -->
@@ -545,6 +559,7 @@
     let savedClips = [];
     let currentAiClips = [];
     let bgmAudioObject = new Audio();
+    let speechRecognitionInstance = null;
 
     window.addEventListener('load', () => {
       loadApiKey();
@@ -668,7 +683,6 @@
       document.getElementById('progressBar').style.width = p + '%';
     }
 
-    // DUAL SLIDER DRAG HANDLERS
     function handleDragIn(val) {
       if (!mainVideo.duration) return;
       let targetIn = (parseFloat(val) / 100) * mainVideo.duration;
@@ -721,7 +735,6 @@
 
     // REALTIME HTML OVERLAY UPDATER
     function updateRealtimeOverlays() {
-      // 1. Header Banner Title
       const isBannerActive = document.getElementById('bannerToggle').checked;
       const bannerText = document.getElementById('bannerTextInput').value;
       const bannerEl = document.getElementById('liveHeaderBanner');
@@ -732,7 +745,6 @@
         bannerEl.classList.add('hidden');
       }
 
-      // 2. Watermark
       const isWatermarkActive = document.getElementById('watermarkToggle').checked;
       const watermarkText = document.getElementById('watermarkTextInput').value || "@korporatpedia";
       const watermarkPos = document.getElementById('watermarkPosSelect').value;
@@ -752,7 +764,6 @@
         watermarkEl.classList.add('hidden');
       }
 
-      // 3. Subtitle Caption
       const isSubtitleActive = document.getElementById('subtitleToggle').checked;
       const subtitleText = document.getElementById('customSubtitleText').value;
       const subColor = document.getElementById('subColorSelect').value;
@@ -768,6 +779,71 @@
       } else {
         subtitleEl.classList.add('hidden');
       }
+    }
+
+    // AUTOMATIC SPEECH-TO-TEXT SUBTITLE ENGINE
+    function startAutoSubtitleSpeechToText() {
+      if (!mainVideo.src) {
+        alert("Unggah file video terlebih dahulu.");
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Browser ini belum mendukung Auto Speech Recognition. Gunakan Chrome atau Edge terbaru.");
+        return;
+      }
+
+      const btnText = document.getElementById('autoSubBtnText');
+      const badge = document.getElementById('sttStatusBadge');
+      
+      speechRecognitionInstance = new SpeechRecognition();
+      speechRecognitionInstance.lang = 'id-ID'; // Bahasa Indonesia
+      speechRecognitionInstance.continuous = true;
+      speechRecognitionInstance.interimResults = true;
+
+      btnText.innerText = "Listening... Mendengarkan Suara Video";
+      badge.innerText = "Merekam Suara";
+      badge.className = "text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold animate-pulse";
+
+      let finalTranscript = '';
+      document.getElementById('customSubtitleText').value = '';
+
+      mainVideo.currentTime = inPoint;
+      mainVideo.play();
+
+      speechRecognitionInstance.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        const combined = (finalTranscript + interimTranscript).trim();
+        document.getElementById('customSubtitleText').value = combined;
+        updateRealtimeOverlays();
+      };
+
+      speechRecognitionInstance.onerror = (event) => {
+        console.warn("Speech error:", event.error);
+        badge.innerText = "Error / Terhenti";
+        btnText.innerText = "🎙️ Transkrip Subtitle dari Suara Video";
+      };
+
+      speechRecognitionInstance.onend = () => {
+        if (!mainVideo.paused && mainVideo.currentTime < outPoint) {
+          speechRecognitionInstance.start();
+        } else {
+          btnText.innerText = " Transkrip Subtitle Selesai!";
+          badge.innerText = "Selesai";
+          badge.className = "text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-bold";
+          setTimeout(() => { btnText.innerText = "🎙️ Transkrip Subtitle dari Suara Video"; }, 3000);
+        }
+      };
+
+      speechRecognitionInstance.start();
     }
 
     function stepFrame(secs) {
@@ -911,7 +987,7 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
           });
         });
 
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
         let response = null;
         let lastErrorMsg = "";
 
@@ -928,15 +1004,16 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
               response = res;
               break;
             } else {
-              lastErrorMsg = `HTTP Error ${res.status}`;
+              const errJson = await res.json().catch(() => ({}));
+              lastErrorMsg = errJson.error?.message || `HTTP ${res.status}`;
             }
           } catch (e) {
-            lastErrorMsg = e.message;
+            lastErrorMsg = e.message || "Gagal terhubung ke Gemini API";
           }
         }
 
         if (!response) {
-          throw new Error(lastErrorMsg || "Gagal menghubungkan API");
+          throw new Error(lastErrorMsg || "Koneksi ke Gemini API terputus");
         }
 
         const data = await response.json();
@@ -948,7 +1025,7 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
         renderAiResultsUI(clips);
       } catch (err) {
         console.error("Gemini AI Error:", err);
-        alert(`Analisis AI: ${err.message}. Memuat rekomendasi klip pintar cadangan...`);
+        alert(`Analisis AI Kendala: ${err.message}.\n\nSistem memuat rekomendasi klip pintar cadangan...`);
         fallbackMoments(promptText, targetDurationSec);
       } finally {
         btn.disabled = false;
@@ -1176,7 +1253,7 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
       startBtn.disabled = false;
     }
 
-    // STABLE EXPORT ENGINE WITH CANVAS OVERLAY DRAWING
+    // EXPORT RENDERER WITH OVERLAY CANVAS DRAWING
     function recordAndDownloadClipWithFolderPicker(clip, clipIndex, totalClips) {
       return new Promise((resolve) => {
         const renderCanvas = document.createElement('canvas');
@@ -1318,7 +1395,7 @@ Jawab HANYA dalam format JSON murni array bertipe JSON tanpa penjelasan tambahan
             const vAR = vw / vh;
             const cAR = cw / ch;
 
-            // DRAW BASE VIDEO FRAME
+            // DRAW BASE VIDEO
             if (currentRatio !== '16:9') {
               let sw = vw, sh = vh;
               if (vAR > cAR) sw = vh * cAR;
