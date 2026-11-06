@@ -6,8 +6,20 @@
 
 - [`index.html`](index.html) — halaman produk premium dan navigasi.
 - [`studio-pro.html`](studio-pro.html) — editor Pro: trim, template, overlay, audio, subtitle bertimestamp, SRT, proyek JSON, dan WebM.
-- [`compress.html`](compress.html) — utilitas kompresi/re-encode lokal untuk mengatur bitrate dan resolusi.
+- [`compress.html`](compress.html) — kompresi/re-encode lokal untuk bitrate dan resolusi lebih rendah.
 - [`studio.html`](studio.html) — alat Gemini opsional untuk rekomendasi momen dan transkripsi audio.
+
+## Alur yang disarankan
+
+1. Buka `studio-pro.html`, pilih video, atur rentang, lalu ekspor klip WebM.
+2. Jika ukuran file masih besar, buka [`compress.html`](compress.html), pilih file hasil ekspor, turunkan bitrate/resolusi, lalu jalankan kompresi.
+3. Periksa ukuran estimasi, format yang didukung browser, dan hasil kualitas sebelum memakai file.
+
+Kompresor menyediakan bitrate video 0.7–5 Mbps, resolusi hingga 37.5%, bitrate audio sekitar 96 kbps, estimasi ukuran, serta deteksi format. Estimasi ukuran bukan jaminan; konten, audio, dan container memengaruhi hasil. Bitrate/resolusi lebih rendah mengurangi ukuran dengan trade-off kualitas. Kompresi ulang dapat memerlukan waktu setidaknya sepanjang video.
+
+## Format MP4 dan browser
+
+`MediaRecorder` hanya dapat menulis codec/container yang benar-benar didukung browser. Kompresor memeriksa dukungan MP4 dan WebM, dan tidak mengganti ekstensi untuk berpura-pura MP4. Bila MP4 tidak tersedia, pilih WebM atau gunakan konverter desktop tepercaya (misalnya HandBrake). MP4 yang konsisten lintas browser memerlukan encoder/transcoder khusus.
 
 ## Memulai
 
@@ -18,33 +30,16 @@ Situs ini statis: tidak ada proses build atau backend aplikasi.
 3. Pilih video dan atur rentang IN/OUT. Gunakan template atau sesuaikan kanvas, judul, watermark, serta musik.
 4. Untuk subtitle, pindahkan playhead, masukkan teks, pilih durasi lalu tekan **Tambah di playhead**. Cue dapat diedit satu per satu, di-burn-in pada ekspor, atau diunduh sebagai SRT.
 5. Simpan pengaturan proyek JSON untuk melanjutkan edit nanti. Proyek tidak menyertakan video atau audio—pilih ulang media saat sesi baru.
-6. Ekspor WebM dan tunggu hingga file terunduh sebelum menutup tab.
-7. Bila ukuran terlalu besar, buka `compress.html`, pilih file WebM hasil ekspor, dan atur bitrate atau resolusi lebih rendah. MP4 hanya tersedia jika browser melaporkan encoder MP4 MediaRecorder yang kompatibel.
-
-## Fitur Pro
-
-- Trim manual dengan timeline, titik masuk/keluar dan pratinjau.
-- Kanvas 16:9, 9:16, dan 1:1 dengan crop tengah.
-- Template Clean, Hook, Creator; kontrol teks, warna, posisi, dan watermark.
-- Musik latar dan pilihan menyertakan audio sumber.
-- Subtitle bertimestamp: tambah, ubah waktu/teks, hapus, tampilkan di kanvas, ekspor SRT.
-- Simpan/muat proyek JSON lokal (pengaturan serta subtitle, bukan file media/key).
-- Pintasan keyboard: Space untuk putar/jeda, tombol panah kiri/kanan untuk mundur/maju 5 detik saat fokus tidak berada pada input.
-- Kompresi lokal di `compress.html` dengan pilihan bitrate, resolusi, dan deteksi format browser.
-
-## Batasan format dan kompresi
-
-`MediaRecorder` hanya dapat menulis codec/container yang benar-benar didukung browser. Utilitas kompresi memeriksa dukungan MP4 dan WebM saat dibuka. Pada browser yang tidak menyediakan MP4, pilih WebM; alat ini tidak mengganti ekstensi untuk berpura-pura MP4. Untuk MP4 yang konsisten lintas browser diperlukan encoder/transcoder khusus, yang biasanya menambah unduhan besar, penggunaan CPU/memori, dan waktu proses. Bitrate lebih kecil umumnya membuat file lebih kecil tetapi dapat menurunkan kualitas. Kompresi ulang juga memerlukan waktu real-time atau lebih lama.
 
 ## Gemini AI opsional
 
 `studio.html` dapat mengirim frame sampel video untuk saran momen klip, atau file audio terpisah untuk transkripsi teks. Fitur ini butuh internet dan Gemini API key milik pengguna. Key dipakai di memori halaman dan tidak disimpan aplikasi. Materi yang dipilih dikirim ke Google saat pengguna memulai analisis. Hasil AI hanyalah saran dan perlu diperiksa. Periksa kuota, harga, kebijakan data, dan ketentuan Google; jangan kirim materi sensitif atau materi yang tidak berhak Anda kirim.
 
-## Privasi dan keterbatasan lain
+## Privasi dan batasan
 
-- Video editor Pro diproses lokal di browser; tidak ada backend upload video.
+- Editor dan kompresor memproses video lokal di browser; tidak ada backend upload video aplikasi.
 - File proyek hanya berisi pengaturan/cue subtitle. Sumber video/audio dan API key tidak disertakan.
-- Ekspor editor saat ini WebM, bukan MP4 native. Codec dan hasil bergantung browser, perangkat, memori, dan izin. Uji klip pendek dahulu.
+- Ekspor editor saat ini WebM, bukan MP4 native. Codec dan hasil bergantung browser, perangkat, memori, dan izin.
 - Crop dilakukan dari tengah; pastikan objek penting tetap terlihat pada pratinjau.
 - Subtitle SRT dibuat dari cue yang dimasukkan pengguna. Alat AI transkripsi menghasilkan teks tanpa timestamp dan bukan subtitle otomatis bertiming.
 - Belum ada sinkronisasi cloud, akun pengguna, ekspor batch, atau tes otomatis lintas browser.
