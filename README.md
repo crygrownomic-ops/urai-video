@@ -1,58 +1,60 @@
 # Urai Video Studio
 
-**Urai Studio Pro** adalah editor video berbasis browser untuk kreator yang ingin memotong klip, mengatur format sosial media, menambahkan teks, dan mengekspor video secara lokal.
+**Urai Studio Pro** adalah editor video statis berbasis browser untuk kreator. Versi Pro membantu trim klip, membentuk video sosial media, menyusun subtitle, menyimpan pengaturan proyek, dan mengekspor WebM secara lokal.
 
 ## Halaman
 
-- [`index.html`](index.html) — halaman produk dan navigasi.
-- [`studio-pro.html`](studio-pro.html) — editor Pro dengan template gaya, trim, musik, ekspor WebM, serta simpan/muat pengaturan proyek JSON.
+- [`index.html`](index.html) — halaman produk premium dan navigasi.
+- [`studio-pro.html`](studio-pro.html) — editor Pro: trim, template, overlay, audio, subtitle bertimestamp, SRT, proyek JSON, dan WebM.
 - [`studio.html`](studio.html) — alat Gemini opsional untuk rekomendasi momen dan transkripsi audio.
 
 ## Memulai
 
-Repositori berupa situs statis, tanpa proses build atau backend aplikasi.
+Situs ini statis: tidak ada proses build atau backend aplikasi.
 
-1. Buka halaman situs atau `studio-pro.html` di browser modern.
-2. Jika browser membatasi akses file, jalankan server lokal di folder repo: `python -m http.server 8000`, lalu buka `http://localhost:8000`.
-3. Pilih video, tetapkan titik masuk/keluar, pilih rasio/template, tambahkan teks atau audio, dan pratinjau klip.
-4. Tekan **Ekspor klip · WebM**. Tunggu hingga download selesai sebelum menutup tab.
-5. Untuk menyimpan pengaturan edit, gunakan **Simpan pengaturan**. File proyek tidak menyertakan video, audio, maupun API key. Muat proyek dan pilih ulang media bila diperlukan.
+1. Buka situs atau `studio-pro.html` di browser modern.
+2. Jika browser membatasi akses file, jalankan `python -m http.server 8000` di folder repository dan buka `http://localhost:8000`.
+3. Pilih video dan atur rentang IN/OUT. Gunakan template atau sesuaikan kanvas, judul, watermark, serta musik.
+4. Untuk subtitle, pindahkan playhead, masukkan teks, pilih durasi lalu tekan **Tambah di playhead**. Cue dapat diedit satu per satu, di-burn-in pada ekspor, atau diunduh sebagai SRT.
+5. Simpan pengaturan proyek JSON untuk melanjutkan edit nanti. Proyek tidak menyertakan video atau audio—pilih ulang media saat sesi baru.
+6. Ekspor WebM dan tunggu hingga file terunduh sebelum menutup tab.
 
 ## Fitur Pro
 
-- Trim manual berbasis waktu, playhead, dan pratinjau rentang.
-- Rasio kanvas 16:9, 9:16, dan 1:1 dengan crop tengah.
-- Template Clean, Hook, dan Creator yang dapat disesuaikan.
-- Judul, watermark, pilihan audio asli, musik latar, dan pengaturan volume.
-- Ekspor WebM menggunakan kemampuan browser (`canvas.captureStream`, `MediaRecorder`, dan Web Audio API).
-- Simpan/muat pengaturan proyek JSON secara lokal.
+- Trim manual dengan timeline, titik masuk/keluar dan pratinjau.
+- Kanvas 16:9, 9:16, dan 1:1 dengan crop tengah.
+- Template Clean, Hook, Creator; kontrol teks, warna, posisi, dan watermark.
+- Musik latar dan pilihan menyertakan audio sumber.
+- Subtitle bertimestamp: tambah, ubah waktu/teks, hapus, tampilkan di kanvas, ekspor SRT.
+- Simpan/muat proyek JSON lokal (pengaturan serta subtitle, bukan file media/key).
+- Pintasan keyboard: Space untuk putar/jeda, tombol panah kiri/kanan untuk mundur/maju 5 detik saat fokus tidak berada pada input.
 
-## Alat Gemini opsional
+## Gemini AI opsional
 
-`studio.html` dapat mengirim frame sampel video untuk saran momen klip dan file audio terpisah untuk transkripsi teks. Penggunaan memerlukan koneksi internet dan Gemini API key milik pengguna. Key dipakai dari memori halaman, tidak disimpan aplikasi. Request AI mengirim materi yang dipilih ke Google Gemini. Hasil AI hanyalah saran dan perlu diperiksa/koreksi. Periksa kuota, harga, kebijakan data, serta ketentuan Google. Jangan kirim materi sensitif atau materi yang Anda tidak berhak kirim.
+`studio.html` dapat mengirim frame sampel video untuk saran momen klip, atau file audio terpisah untuk transkripsi teks. Fitur ini butuh internet dan Gemini API key milik pengguna. Key dipakai di memori halaman dan tidak disimpan aplikasi. Materi yang dipilih dikirim ke Google saat pengguna memulai analisis. Hasil AI hanyalah saran dan perlu diperiksa. Periksa kuota, harga, kebijakan data, dan ketentuan Google; jangan kirim materi sensitif atau materi yang tidak berhak Anda kirim.
 
-## Privasi dan keterbatasan
+## Privasi dan batasan
 
-- Editor Pro memproses file video lokal di browser dan tidak mengunggahnya ke server aplikasi.
-- File proyek hanya berisi pengaturan editor; media sumber tidak termasuk.
-- Audio untuk AI dikirim hanya saat fitur transkripsi dipicu. Alat transkripsi mengembalikan teks, bukan subtitle bertimestamp.
-- Ekspor saat ini WebM, bukan MP4 native. Codec dan hasilnya bergantung browser, perangkat, memori, dan izin. Uji klip pendek lebih dahulu.
-- Crop rasio terpusat; periksa objek penting sebelum mengekspor.
-- Belum ada sinkronisasi cloud, akun pengguna, ekspor SRT/VTT, atau pengujian otomatis lintas browser.
+- Video editor Pro diproses lokal di browser; tidak ada backend upload video.
+- File proyek hanya berisi pengaturan/cue subtitle. Sumber video/audio dan API key tidak disertakan.
+- Ekspor saat ini WebM, bukan MP4 native. Codec dan hasil bergantung browser, perangkat, memori, dan izin. Uji klip pendek dahulu.
+- Crop dilakukan dari tengah; pastikan objek penting tetap terlihat pada pratinjau.
+- Subtitle SRT dibuat dari cue yang dimasukkan pengguna. Alat AI transkripsi menghasilkan teks tanpa timestamp dan bukan subtitle otomatis bertiming.
+- Belum ada sinkronisasi cloud, akun pengguna, ekspor batch, atau tes otomatis lintas browser.
 
-## Publikasikan dengan GitHub Pages
+## GitHub Pages
 
-1. Buka **Settings → Pages** pada repositori.
-2. Pilih **Deploy from a branch**, pilih branch `main` dan folder root `/`, lalu simpan.
-3. Tunggu proses deployment dan buka URL Pages yang ditampilkan GitHub.
-4. Pastikan halaman awal, editor, dan tautan panduan berfungsi di desktop serta perangkat mobile.
+1. Buka **Settings → Pages** pada repository.
+2. Pilih **Deploy from a branch**, pilih `main` dan folder root `/`, lalu simpan.
+3. Tunggu deployment dan kunjungi URL Pages yang ditampilkan GitHub.
+4. Uji tautan, upload lokal, subtitle, simpan/muat proyek, dan ekspor di desktop serta mobile.
 
-Sajikan melalui HTTPS untuk kompatibilitas API browser yang lebih baik. Jangan menaruh API key pribadi di source HTML atau commit repository.
+Sajikan melalui HTTPS untuk kompatibilitas API browser yang lebih baik. Jangan commit API key pribadi atau menaruhnya di HTML publik.
 
-## Pemeriksaan sebelum dipakai
+## Sebelum publikasi
 
-Uji file dengan audio dan tanpa audio, ketiga rasio, batas rentang, musik latar, simpan/muat proyek, dan ekspor pada browser yang akan digunakan. Pastikan ada hak penggunaan atas video dan musik. Periksa hasil WebM sebelum publikasi.
+Uji file dengan audio dan tanpa audio, ketiga rasio, batas clip, musik latar, project JSON, cue subtitle/SRT, ekspor WebM, serta browser sasaran. Pastikan hak penggunaan atas video dan musik. Periksa file akhir sebelum publikasi.
 
 ## Kredit dan lisensi
 
-Dikembangkan oleh Urai Ikhsan Fadhilah. Tambahkan file LICENSE jika ingin menetapkan syarat penggunaan/distribusi.
+Dikembangkan oleh Urai Ikhsan Fadhilah. Tambahkan file `LICENSE` bila ingin menetapkan syarat penggunaan atau distribusi.
