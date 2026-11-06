@@ -1,54 +1,56 @@
 # Urai Video Studio
 
-Aplikasi web satu halaman untuk meninjau video lokal, memilih rentang klip, menambahkan overlay sederhana, meminta rekomendasi momen dari Gemini, dan mengekspor hasil melalui browser.
+Editor video berbasis browser untuk memotong klip, menambahkan judul/watermark, dan mengekspor hasil WebM. Aplikasi dapat dijalankan sebagai situs statis; tidak ada server aplikasi atau proses build.
 
-> **Status:** prototipe sisi-klien. Fitur dan format ekspor bergantung pada browser/perangkat; selalu tinjau hasil sebelum dipublikasikan.
+## Mulai
 
-## Fitur
+- **Editor:** buka [`studio.html`](studio.html).
+- **Halaman awal:** `index.html` berisi ringkasan fitur dan tautan ke editor.
+- Untuk mencoba di komputer, buka file melalui browser modern. Jika fitur browser membatasi akses file, jalankan server statis lokal, misalnya `python -m http.server 8000`, lalu buka `http://localhost:8000`.
 
-- Memuat video dari perangkat (MP4, WebM, MOV yang didukung browser).
-- Memutar, mengatur kecepatan, memilih titik masuk/keluar, dan melihat pratinjau klip.
-- Mengatur rasio pratinjau 16:9, 9:16, atau 1:1.
-- Menambahkan banner, watermark, subtitle, dan audio latar pada pratinjau.
-- Meminta rekomendasi momen klip dan caption dari Gemini berdasarkan cuplikan frame.
-- Menyimpan pilihan klip dan mengekspor melalui kemampuan perekaman browser.
+## Gunakan editor
 
-## Menjalankan aplikasi
+1. Pilih video dari perangkat. Tunggu hingga durasi terbaca.
+2. Atur titik masuk/keluar dengan kolom detik, slider pemutaran, atau tombol **Tetapkan masuk/keluar**.
+3. Pilih rasio, masukkan judul dan/atau watermark, dan pilih musik latar bila diperlukan.
+4. Gunakan **Pratinjau potongan** untuk memeriksa rentang, lalu tekan **Ekspor klip (WebM)**.
+5. Tunggu sampai unduhan selesai sebelum menutup halaman.
 
-Aplikasi ini berupa HTML statis dan tidak memerlukan proses build:
+Ekspor menggunakan `canvas.captureStream`, `MediaRecorder`, dan `Web Audio API` yang tersedia di browser. Hasilnya WebM; dukungan codec, ukuran dan kualitas tergantung browser serta perangkat. Coba video pendek lebih dahulu. File WebM mungkin perlu dikonversi untuk platform yang mengharuskan MP4.
 
-1. Buka `index.html` di browser modern, atau sajikan folder ini melalui hosting statis seperti GitHub Pages.
-2. Pilih video dari perangkat.
-3. Atur titik **In/Out**, rasio, dan overlay sesuai kebutuhan.
-4. Simpan klip pilihan. Untuk rekomendasi AI, masukkan Gemini API key milik sendiri melalui tombol **Gemini API Key**, lalu jalankan analisis.
-5. Pilih klip yang akan diekspor dan ikuti dialog browser.
+## Fitur Gemini (opsional)
 
-Koneksi internet diperlukan untuk memuat pustaka/font dari CDN dan menggunakan Gemini. Izin atau dukungan browser tambahan mungkin dibutuhkan untuk ekspor.
+Editor menyediakan dua tindakan AI:
 
-## Gemini API key dan privasi
+- **Usulkan momen klip:** mengirim sejumlah frame sampel dari video ke Gemini untuk memperoleh saran rentang dan alasan. Waktu saran hanya perkiraan; periksa dan pratinjau sebelum mengekspor.
+- **Transkripsikan audio:** memilih file audio terpisah untuk memperoleh teks transkrip. Output tidak berisi timing subtitle dan perlu ditinjau/koreksi.
 
-- Buat dan kelola key melalui [Google AI Studio](https://aistudio.google.com/). Penggunaan tunduk pada kuota, harga, dan ketentuan Google; aplikasi tidak menyediakan API gratis.
-- Key disimpan di `localStorage` browser. Itu **bukan penyimpanan rahasia yang aman**: jangan gunakan key berhak akses luas pada perangkat bersama, dan hapus key setelah selesai.
-- Analisis AI mengirim gambar keyframe yang diambil dari video ke layanan Google Gemini. Jangan analisis video yang memuat informasi sensitif atau materi yang tidak berhak Anda kirim.
-- Transkripsi menggunakan Web Speech API jika tersedia. Implementasi dan pemrosesan audio mengikuti dukungan serta kebijakan browser; jangan menganggap audio selalu diproses sepenuhnya offline.
-- File video dipilih dari perangkat, tetapi pustaka pihak ketiga dimuat dari CDN. Untuk penggunaan sensitif, tinjau kode dan dependensi terlebih dahulu.
+Untuk menggunakan AI, masukkan Gemini API key pada editor dan dapatkan/kelola key dari [Google AI Studio](https://aistudio.google.com/). Key hanya berada di memori halaman dan tidak disimpan oleh aplikasi; request API mengirim key ke Google melalui header, bukan menyimpannya ke localStorage. Frame/audio yang diminta untuk dianalisis dikirim langsung ke Gemini. API memerlukan internet dan dapat tunduk pada kuota, harga, kebijakan retensi, serta ketentuan Google. Jangan kirim materi sensitif. Gunakan key dengan pembatasan yang sesuai dan hapus/rotasi key bila terpapar.
 
-## Batasan yang perlu diketahui
+## Privasi dan batasan
 
-- Speech recognition tidak tersedia di semua browser dan hasil Bahasa Indonesia dapat memerlukan koreksi manual.
-- Rekomendasi Gemini hanya berdasarkan sejumlah frame sampel, bukan pemahaman penuh atas setiap frame atau transkrip. Periksa kembali waktu klip, konteks, caption, dan hashtag.
-- Rasio yang dipilih memengaruhi pratinjau; periksa hasil ekspor untuk memastikan crop, audio, overlay, dan codec sesuai kebutuhan.
-- Ekspor berbasis browser dapat gagal atau terbatas oleh codec, memori, durasi video, izin folder, dan dukungan `MediaRecorder`/File System Access API. Coba klip pendek terlebih dahulu.
-- Jangan menutup atau memuat ulang halaman selama pekerjaan penting belum selesai. Simpan hasil akhir ke perangkat dan buat salinan cadangan.
+- Video sumber diproses secara lokal di browser dan tidak diunggah oleh editor ke backend aplikasi.
+- Hanya ketika Anda menjalankan fitur Gemini, frame yang dipilih atau audio yang dipilih akan dikirim ke layanan Google.
+- Fitur transkripsi menerima file audio secara terpisah; editor tidak mengklaim bahwa browser otomatis mentranskripsikan suara video. Batas input aplikasi saat ini 20 MB.
+- Tidak tersedia subtitle bertimestamp, ekspor SRT/VTT, atau ekspor MP4 native.
+- File panjang/resolusi tinggi dapat lambat, gagal karena memori, atau menghasilkan audio/video yang berbeda antarbrowser. Audio latar dicampur dengan audio asli.
+- Pemilihan rasio menggunakan crop tengah. Periksa objek penting pada pratinjau, khususnya saat membuat video vertikal.
+- Pustaka UI eksternal tidak digunakan pada editor ini; permintaan AI tetap memakai layanan Google.
+
+## Publikasikan dengan GitHub Pages
+
+1. Pastikan `index.html`, `studio.html`, dan `README.md` berada di root branch publikasi.
+2. Di repositori, buka **Settings → Pages**.
+3. Pada **Build and deployment**, pilih **Deploy from a branch**, pilih branch yang berisi file (misalnya `main`) dan folder `/ (root)`, kemudian simpan.
+4. Tunggu deployment selesai dan buka URL Pages yang ditampilkan di pengaturan. `index.html` menjadi halaman awal; tombol **Mulai mengedit video** membuka editor.
+5. Uji tautan, upload, pratinjau, dan ekspor di browser desktop dan mobile. Untuk fitur AI, pastikan koneksi, API key, dan kuota Google tersedia.
+
+Editor sebaiknya disajikan melalui HTTPS (GitHub Pages menyediakan HTTPS) untuk dukungan API browser yang lebih baik. Jangan pernah menaruh API key pemilik di file HTML, repository, atau script publik.
 
 ## Pemeriksaan sebelum rilis
 
-Sebelum menggunakan hasil secara publik, uji setidaknya: video pendek dan panjang, tiap rasio, rentang In/Out dekat batas durasi, video tanpa audio, BGM aktif/nonaktif, browser desktop dan mobile, serta unduhan/ekspor dengan format yang dihasilkan browser. Pastikan juga Anda memiliki hak atas video, musik, dan materi yang digunakan.
+Coba video dengan audio dan tanpa audio, rasio 16:9/9:16/1:1, batas awal/akhir, audio latar, ekspor WebM, serta browser desktop/mobile. Cek juga bahwa permintaan AI hanya terjadi setelah pengguna menekan tombolnya. Aplikasi ini belum diuji otomatis lintas browser; hasil produksi perlu diverifikasi manual.
 
-## Pengembangan selanjutnya
+## Kredit dan lisensi
 
-Prioritas yang akan membuat aplikasi lebih andal: validasi ukuran/format dan batas durasi input; penanganan kegagalan ekspor yang jelas; kontrol untuk membatalkan proses; editor subtitle bertimestamp dan ekspor SRT/VTT; opsi kualitas/codec dengan deteksi dukungan browser; serta pengujian otomatis untuk pemotongan dan overlay.
-
-## Kredit
-
-Dikembangkan oleh Urai Ikhsan Fadhilah.
+Dikembangkan oleh Urai Ikhsan Fadhilah. Tambahkan file lisensi jika ingin menetapkan syarat penggunaan atau distribusi kode.
