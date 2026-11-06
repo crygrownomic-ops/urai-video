@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0f17">
+  <title>Urai Video Studio — Editor Lokal</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#0b0f17;color:#e2e8f0}*{box-sizing:border-box}body{margin:0}header,main,footer{max-width:1180px;margin:auto;padding:20px}header{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:1px solid #263244}h1{font-size:1.35rem;margin:0}p{color:#a7b3c5;line-height:1.55}.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:20px}.card{background:#111827;border:1px solid #263244;border-radius:16px;padding:18px;margin-bottom:16px}.stage{background:#05070a;border-radius:12px;overflow:hidden;display:grid;place-items:center;min-height:240px}canvas{display:block;width:100%;max-height:68vh;object-fit:contain}video{display:none}label{display:block;font-size:.88rem;font-weight:650;margin:12px 0 6px}input[type=text],input[type=file],select,textarea,input[type=number]{width:100%;padding:10px;border:1px solid #344256;border-radius:9px;background:#0b1220;color:#e2e8f0}input[type=range]{width:100%;accent-color:#818cf8}button{border:0;border-radius:9px;padding:10px 14px;background:#4f46e5;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.times{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums;color:#cbd5e1}.hint{font-size:.82rem;color:#94a3b8}.notice{padding:12px;border:1px solid #854d0e;background:#42200655;border-radius:10px;color:#fde68a;font-size:.85rem}.status{min-height:1.5em;color:#a5b4fc}.hidden{display:none!important}footer{font-size:.82rem;color:#94a3b8}@media(max-width:800px){.layout{grid-template-columns:1fr}header,main,footer{padding:14px}.stage{min-height:200px}}
+  </style>
+</head>
+<body>
+  <header><div><h1>Urai Video Studio <span style="color:#a5b4fc">— Editor Lokal</span></h1><p class="hint">Potong, beri teks, lalu ekspor video langsung di browser.</p></div><a href="index.html" style="color:#a5b4fc">Versi studio lama</a></header>
+  <main class="layout">
+    <section>
+      <div class="card">
+        <label for="videoFile">Pilih video dari perangkat</label><input id="videoFile" type="file" accept="video/*">
+        <p id="fileInfo" class="hint">Video tidak diunggah ke server oleh editor ini. Batas ukuran praktis bergantung pada memori perangkat.</p>
+      </div>
+      <div class="card">
+        <div class="stage"><video id="source" playsinline preload="metadata"></video><canvas id="preview" aria-label="Pratinjau video dengan overlay"></canvas></div>
+        <div class="times" style="margin-top:14px"><span>Masuk: <b id="inLabel">00:00</b></span><span>Saat ini: <b id="nowLabel">00:00</b></span><span>Keluar: <b id="outLabel">00:00</b></span></div>
+        <label for="seek">Posisi video</label><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Posisi video">
+        <div class="row"><button id="playBtn" type="button" disabled>Putar</button><button id="previewBtn" type="button" disabled>Pratinjau potongan</button></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1rem;margin-top:0">Rentang klip</h2>
+        <div class="row"><div><label for="clipIn">Mulai (detik)</label><input id="clipIn" type="number" min="0" step="0.1" value="0"></div><div><label for="clipOut">Selesai (detik)</label><input id="clipOut" type="number" min="0" step="0.1" value="0"></div></div>
+        <p class="hint">Atur waktu dengan slider, lalu gunakan tombol titik masuk/keluar agar lebih mudah.</p>
+        <div class="row"><button id="setInBtn" type="button" disabled>Tetapkan titik masuk</button><button id="setOutBtn" type="button" disabled>Tetapkan titik keluar</button></div>
+      </div>
+    </section>
+    <aside>
+      <div class="card">
+        <h2 style="font-size:1rem;margin-top:0">Tampilan & teks</h2>
+        <label for="ratio">Rasio ekspor</label><select id="ratio"><option value="16:9">16:9 — Lanskap</option><option value="9:16">9:16 — Vertikal</option><option value="1:1">1:1 — Persegi</option></select>
+        <label for="overlayText">Teks overlay (opsional)</label><input id="overlayText" type="text" maxlength="120" placeholder="Tulis judul atau caption">
+        <label for="watermark">Watermark (opsional)</label><input id="watermark" type="text" maxlength="60" placeholder="@akunanda">
+        <label for="bgm">Musik latar (opsional)</label><input id="bgm" type="file" accept="audio/*">
+        <label for="bgmVolume">Volume musik latar <span id="volumeLabel">20%</span></label><input id="bgmVolume" type="range" min="0" max="1" step="0.05" value="0.2">
+        <p class="hint">Overlay dan musik latar dimasukkan ke ekspor. Subtitle di sini berupa teks statis, bukan transkripsi bertimestamp.</p>
+      </div>
+      <div class="card">
+        <div class="notice"><strong>Privasi:</strong> pemrosesan video dilakukan lokal di browser. Jangan tutup tab saat ekspor. File besar dapat memakai banyak memori dan hasil ekspor mengikuti codec yang didukung browser.</div>
+        <p id="status" class="status" role="status" aria-live="polite">Pilih video untuk memulai.</p>
+        <button id="exportBtn" type="button" disabled style="width:100%">Ekspor klip</button>
+        <progress id="progress" value="0" max="100" class="hidden" style="width:100%;margin-top:12px"></progress>
+        <p class="hint">Jika ekspor tidak didukung, coba Chrome/Edge desktop terbaru dan video lebih pendek. Hasil WebM mungkin perlu dikonversi untuk beberapa platform.</p>
+      </div>
+    </aside>
+  </main>
+  <footer>Gunakan hanya video dan audio yang Anda miliki atau berhak gunakan. Pratinjau dapat berbeda dari pemutaran akhir pada perangkat lain.</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const video = $('source'), canvas = $('preview'), ctx = canvas.getContext('2d');
+  let videoUrl = '', bgmUrl = '', bgmAudio = null, raf = 0, exporting = false, audioContext = null, videoSource = null, bgmSource = null, bgmGain = null;
+  const fmt = n => { n = Math.max(0, Number(n) || 0); return `${String(Math.floor(n / 60)).padStart(2,'0')}:${String(Math.floor(n % 60)).padStart(2,'0')}.${String(Math.floor((n % 1) * 10))}`; };
+  const duration = () => Number.isFinite(video.duration) ? video.duration : 0;
+  const status = text => $('status').textContent = text;
+  function updateTime(){
+    const d = duration(); $('nowLabel').textContent = fmt(video.currentTime); $('inLabel').textContent = fmt($('clipIn').value); $('outLabel').textContent = fmt($('clipOut').value);
+    if (d) $('seek').value = Math.round(video.currentTime / d * 1000);
+  }
+  function setCanvasSize(){
+    const [w,h] = $('ratio').value === '9:16' ? [720,1280] : $('ratio').value === '1:1' ? [720,720] : [1280,720];
+    if(canvas.width!==w || canvas.height!==h){canvas.width=w;canvas.height=h;} draw();
+  }
+  function draw(){
+    if(!canvas.width || !canvas.height)return;
+    const w=canvas.width,h=canvas.height; ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+    if(video.videoWidth && video.videoHeight){const scale=Math.min(w/video.videoWidth,h/video.videoHeight),dw=video.videoWidth*scale,dh=video.videoHeight*scale;ctx.drawImage(video,(w-dw)/2,(h-dh)/2,dw,dh);}
+    const title=$('overlayText').value.trim(), mark=$('watermark').value.trim();
+    if(title){ctx.font=`700 ${Math.max(22,Math.round(w*.04))}px system-ui`;ctx.textAlign='center';ctx.textBaseline='top';const lines=wrap(title,w*.86);ctx.fillStyle='rgba(0,0,0,.68)';const lineH=Math.max(26,w*.047), pad=14, boxH=lines.length*lineH+pad*2;ctx.fillRect(0,0,w,boxH);ctx.fillStyle='#fff';lines.forEach((line,i)=>ctx.fillText(line,w/2,pad+i*lineH));}
+    if(mark){ctx.font=`600 ${Math.max(16,Math.round(w*.022))}px system-ui`;ctx.textAlign='right';ctx.textBaseline='bottom';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillText(mark,w-24,h-24);ctx.shadowBlur=0;}
+    updateTime();
+  }
+  function wrap(text,max){const words=text.split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>max&&line){lines.push(line);line=word;}else line=test;}if(line)lines.push(line);return lines.slice(0,3);}
+  function enableControls(on){['playBtn','previewBtn','setInBtn','setOutBtn','exportBtn'].forEach(id=>$(id).disabled=!on);}
+  $('videoFile').addEventListener('change',e=>{
+    const file=e.target.files?.[0];if(!file)return;if(!file.type.startsWith('video/')){status('File yang dipilih bukan video.');e.target.value='';return;}
+    if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(file);video.pause();video.src=videoUrl;video.load();$('fileInfo').textContent=`${file.name} • ${(file.size/1048576).toFixed(1)} MB • diproses lokal`;
+    status('Memuat metadata video…');
+  });
+  video.addEventListener('loadedmetadata',()=>{if(!duration()){status('Durasi video tidak dapat dibaca. Coba format lain.');return;}$('clipIn').value='0';$('clipOut').value=duration().toFixed(1);$('seek').max='1000';enableControls(true);setCanvasSize();status('Video siap. Atur rentang klip dan overlay.');});
+  video.addEventListener('error',()=>status('Video gagal dibuka. Format atau codec mungkin tidak didukung browser.'));
+  video.addEventListener('loadeddata',draw);video.addEventListener('seeked',draw);video.addEventListener('timeupdate',()=>{draw();if(exporting&&video.currentTime>=Number($('clipOut').value))finishExport();});
+  video.addEventListener('play',()=>{ $('playBtn').textContent='Jeda'; });video.addEventListener('pause',()=>{ if(!exporting)$('playBtn').textContent='Putar'; });video.addEventListener('ended',()=>{if(exporting)finishExport();});
+  $('seek').addEventListener('input',()=>{if(duration()){video.currentTime=Number($('seek').value)/1000*duration();draw();}});
+  $('playBtn').onclick=async()=>{if(video.paused){try{await video.play();}catch{status('Browser tidak dapat memutar video.');}}else video.pause();};
+  $('setInBtn').onclick=()=>{$('clipIn').value=Math.min(video.currentTime,Math.max(0,duration()-.1)).toFixed(1);updateTime();};
+  $('setOutBtn').onclick=()=>{$('clipOut').value=Math.max(video.currentTime,Number($('clipIn').value)+.1).toFixed(1);updateTime();};
+  $('previewBtn').onclick=async()=>{const {start,end}=getRange();if(!validRange(start,end))return;video.currentTime=start;try{await video.play();}catch{}const stop=()=>{if(video.currentTime>=end){video.pause();video.removeEventListener('timeupdate',stop);}};video.addEventListener('timeupdate',stop);};
+  ['clipIn','clipOut'].forEach(id=>$(id).addEventListener('change',()=>{updateTime();draw();}));
+  ['ratio','overlayText','watermark'].forEach(id=>$(id).addEventListener(id==='ratio'?'change':'input',setCanvasSize));
+  $('bgmVolume').oninput=()=>{$('volumeLabel').textContent=`${Math.round(Number($('bgmVolume').value)*100)}%`;if(bgmGain)bgmGain.gain.value=Number($('bgmVolume').value);};
+  $('bgm').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;if(bgmUrl)URL.revokeObjectURL(bgmUrl);bgmUrl=URL.createObjectURL(file);bgmAudio=new Audio(bgmUrl);bgmAudio.loop=true;status(`Musik latar dipilih: ${file.name}`);});
+  function getRange(){return {start:Number($('clipIn').value),end:Number($('clipOut').value)};}
+  function validRange(start,end){if(!duration()||!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>duration()||end<=start){status('Rentang klip tidak valid. Pastikan 0 ≤ mulai < selesai ≤ durasi video.');return false;}return true;}
+  function prepareAudio(stream){
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)throw new Error('AudioContext tidak didukung browser.');
+    audioContext=new AudioCtx();const destination=audioContext.createMediaStreamDestination();
+    videoSource=audioContext.createMediaElementSource(video);videoSource.connect(audioContext.destination);videoSource.connect(destination);
+    if(bgmAudio){bgmSource=audioContext.createMediaElementSource(bgmAudio);bgmGain=audioContext.createGain();bgmGain.gain.value=Number($('bgmVolume').value);bgmSource.connect(bgmGain);bgmGain.connect(destination);}
+    destination.stream.getAudioTracks().forEach(track=>stream.addTrack(track));return destination.stream;
+  }
+  let recorder=null, chunks=[], exportStream=null, endTimer=0, stopTimer=0, exportStartedAt=0;
+  function finishExport(){if(!exporting)return;exporting=false;clearInterval(endTimer);clearTimeout(stopTimer);video.pause();if(bgmAudio)bgmAudio.pause();if(recorder&&recorder.state!=='inactive')recorder.stop();}
+  $('exportBtn').onclick=async()=>{
+    const {start,end}=getRange();if(!validRange(start,end))return;
+    if(!canvas.captureStream||!window.MediaRecorder){status('Ekspor tidak tersedia di browser ini. Gunakan browser desktop modern.');return;}
+    const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));
+    if(!mime){status('Browser ini tidak menyediakan format ekspor yang didukung.');return;}
+    $('exportBtn').disabled=true;$('progress').classList.remove('hidden');$('progress').value=0;chunks=[];
+    try{
+      if(!audioContext)prepareAudio(canvas.captureStream(30));
+      await audioContext.resume();
+      if(video.currentTime<start||video.currentTime>=end){video.currentTime=start;await new Promise(resolve=>video.addEventListener('seeked',resolve,{once:true}));}
+      setCanvasSize();exportStream=canvas.captureStream(30);const audioStream=audioContext.createMediaStreamDestination();
+      // Route the already-created media sources to this export destination while preserving local playback.
+      videoSource.connect(audioStream);if(bgmGain)bgmGain.connect(audioStream);
+      audioStream.stream.getAudioTracks().forEach(track=>exportStream.addTrack(track));
+      recorder=new MediaRecorder(exportStream,{mimeType:mime});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+      recorder.onerror=()=>{status('Perekaman gagal. Coba video lebih pendek atau browser lain.');finishExport();};
+      recorder.onstop=()=>{
+        exportStream?.getTracks().forEach(t=>t.stop());audioStream.stream.getTracks().forEach(t=>t.stop());
+        if(audioContext){audioContext.close().catch(()=>{});audioContext=null;videoSource=null;bgmSource=null;bgmGain=null;}
+        const blob=new Blob(chunks,{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`urai-klip-${Date.now()}.webm`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+        $('progress').value=100;$('exportBtn').disabled=false;status(`Ekspor selesai (${(blob.size/1048576).toFixed(1)} MB). File WebM diunduh.`);$('playBtn').textContent='Putar';
+      };
+      if(bgmAudio){bgmAudio.currentTime=0;await bgmAudio.play().catch(()=>{});}
+      exporting=true;exportStartedAt=performance.now();recorder.start(250);await video.play();
+      endTimer=setInterval(()=>{const pct=Math.min(100,(video.currentTime-start)/(end-start)*100);$('progress').value=pct;if(video.currentTime>=end)finishExport();},100);
+      stopTimer=setTimeout(()=>finishExport(),(end-start)*1000+8000);status('Mengekspor… tunggu hingga file selesai diunduh.');
+    }catch(err){console.error(err);finishExport();$('exportBtn').disabled=false;status(`Ekspor gagal: ${err.message||'periksa dukungan browser dan izin media.'}`);}
+  };
+  window.addEventListener('beforeunload',e=>{if(exporting){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('beforeunload',()=>{if(videoUrl)URL.revokeObjectURL(videoUrl);if(bgmUrl)URL.revokeObjectURL(bgmUrl);cancelAnimationFrame(raf);});
+  enableControls(false);setCanvasSize();
+})();
+</script>
+</body>
+</html>
